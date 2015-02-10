@@ -44,6 +44,7 @@ module CDDAIV
     property :open, Boolean, default: true, required: true
     property :from, DateTime, required: true
     property :until, DateTime
+    property :score, Integer, default: 0, required: true
 
     has n, :votes
   end
@@ -51,11 +52,12 @@ module CDDAIV
   class Vote
     include DataMapper::Resource
 
-    belongs_to :user, key: true
-    belongs_to :issue, key: true
-
+    property :id, Serial, key: true
     property :dir, Enum[:up, :down], required: true
     property :when, DateTime, default: Proc.new { DateTime.now }, required: true
+
+    belongs_to :user, key: true
+    belongs_to :issue, key: true
   end
 
   DataMapper.finalize

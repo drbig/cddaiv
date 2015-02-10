@@ -1,7 +1,69 @@
-!!! Strict
-%html{:xmlns => 'http://www.w3.org/1999/xhtml'}
+!!!
+%html{:lang => "en"}
   %head
-    %meta{:'http-equiv' => 'Content-Type', :content => 'text/html; charset=utf-8'}
-    %title= 'CDDA Issue Votes - New issues'
+    %meta{:charset => "utf-8"}/
+    %meta{:content => "IE=edge", "http-equiv" => "X-UA-Compatible"}/
+    %meta{:content => "width=device-width, initial-scale=1", :name => "viewport"}/
+    %title CDDA Issue Voter
+    %link{:href => "/css/bootstrap.css", :rel => "stylesheet"}/
+    %link{:href => "/css/bootstrap-theme.css", :rel => "stylesheet"}/
+    %link{:href => "/css/main.css", :rel => "stylesheet"}/
   %body
-    Hello
+    .navbar.navbar-inverse.navbar-fixed-top{:role => "navigation"}
+      .container
+        .navbar-header
+          %button.navbar-toggle{"data-target" => ".navbar-collapse", "data-toggle" => "collapse", :type => "button"}
+            %span.sr-only Toggle navigation
+            %span.icon-bar
+            %span.icon-bar
+            %span.icon-bar
+          %a.navbar-brand{:href => "#"} CDDA IV
+        .collapse.navbar-collapse
+          %ul.nav.navbar-nav
+            %li.active
+              %a All
+            %li
+              %a Top
+            %li
+              %a Bottom
+            %li
+              %a Closed
+          %ul.nav.navbar-nav.navbar-right
+            - if user
+              %li
+                %a= user
+            %li
+              %a{:href => '/about'} About
+    .container.section
+      - unless user
+        %div.row
+          %div.col-md-6
+            %div.panel.panel-default
+              %div.panel-heading Login here
+              %div.panel-body
+                %form{:role => "form", :action => "/login", :method => "post"}
+                  .form-group
+                    %input.form-control{:name => "login", :type => "text", :placeholder => "Login"}
+                  .form-group
+                    %input.form-control{:name => "pass", :type => "password", :placeholder => "Password"}
+                  %button.btn.btn-success{:type => "submit"} Login
+          %div.col-md-6
+            %div.panel.panel-default
+              %div.panel-heading Or register here
+              %div.panel-body
+                %form{:role => "form", :action => "/register", :method => "post"}
+                  .form-group
+                    %input.form-control{:name => "login", :type => "text", :placeholder => "Login"}
+                  .form-group
+                    %input.form-control{:name => "passa", :type => "password", :placeholder => "Password"}
+                  .form-group
+                    %input.form-control{:name => "passb", :type => "password", :placeholder => "Password again"}
+                  .form-group
+                    %input.form-control{:name => "email", :type => "email", :placeholder => "E-Mail"}
+                  %button.btn.btn-success{:type => "submit"} Register
+ 
+    .container
+      .footer
+        &copy; Copyright 2015 Piotr S. Staszewski
+    %script{:src => "/js/jquery-2.1.1.js"}
+    %script{:src => "/js/bootstrap.js"}

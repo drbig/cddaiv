@@ -29,7 +29,8 @@ module CDDAIV
     end
 
     get '/' do
-      haml :index
+      user = session[:user] ? User.get(session[:user]) : nil
+      haml :index, locals: {user: user}
     end
 
     get '/vote/:dir/:id' do
@@ -40,9 +41,24 @@ module CDDAIV
       user = User.get(session[:user])
       issue = Issue.get(params[:id])
       return {error: 'No such issue.'}.to_json unless issue
+      vote = Vote.new(user: user, issue: issue)
+
+      case dir
+      when :up
+        issue.score += 1
+        vote.dir = :up
+      when :down
+        issue.score -= 1
+        vote.dir = :down
+      end
+      vote.save!
+
+      {success: 'Vote saved.', id: vote.id}.to_json
     end
 
     get '/issues/:op' do
+      content_type 'application/json'
+
       op = params[:op].to_sym
       data = case op
              when :all
@@ -50,21 +66,14 @@ module CDDAIV
              when :closed
                Issue.all(open: false, limit: 30, order: [:from.desc]).to_a
              when :top
-               Issue.all(open: true).sort_by {|i| i.votes.count  }.to_a.slice(0, 30)
+               Issue.all(open: true, limit: 30, order: [:score.desc]).to_a
              when :bottom
-               Issue.all(open: true).sort_by {|i| -i.votes.count }.to_a.slice(0, 30)
-             when :user
-               if session[:user]
-                 User.get(session[:user]).votes.map(&:issue).sort_by {|i| i.votes.count }.to_a
-               else
-                 {error: 'Not logged in.'}
-               end
+               Issue.all(open: true, limit: 30, order: [:score.asc]).to_a
              else
-               {error: 'Unknown data op.'}
+               return {error: 'Unknown data op.'}.to_json
              end
 
-      content_type 'application/json'
-      data.to_json
+      {success: 'Loaded data.', data: data}.to_json
     end
 
     post '/user/login' do
