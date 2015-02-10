@@ -8,35 +8,32 @@ require 'chronic'
 require 'thor'
 
 require 'cddaiv/model'
+require 'cddaiv/log'
 
 class CLI < Thor
-  include CDDAIV
+  class_option :db, type: :string, default: 'sqlite://cddaiv.bin', desc: 'Database URI'
+  class_option :verbose, type: :boolean, default: false, desc: 'Enable debug logging'
+  class_option :log, type: :string, desc: 'Log to FILE'
 
-  @@config = {
-    'db' => 'sqlite://cddaiv.bin',
-  }
-
-  desc 'seed', 'initialise the databases'
-  option :db
+  desc 'seed', 'Migrate and seed the database.'
   def seed
-    cfg = @@config.merge!(options)
+    CDDAIV::Log.default!(options)
 
     require 'cddaiv/sync'
 
-    Database.setup!(cfg['db'], migrate: true)
-    Database.update!
+    CDDAIV::Database.setup!(options[:db], migrate: true)
+    CDDAIV::Database.update!
   end
 
-  desc 'update', 'update the issues database'
-  option :since
-  option :db
+  desc 'update', 'Update the issues database.'
+  method_option :since, type: :string, desc: 'Update since the given date'
   def update
-    cfg = @@config.merge(options)
+    CDDAIV::Log.default!(options)
 
     require 'cddaiv/sync'
 
-    Database.setup!(cfg['db'])
-    Database.update!(cfg)
+    CDDAIV::Database.setup!(options[:db])
+    CDDAIV::Database.update!(options)
   end
 end
 

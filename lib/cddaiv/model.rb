@@ -5,6 +5,8 @@ require 'digest/sha1'
 require 'dm-core'
 require 'dm-validations'
 
+require 'cddaiv/log'
+
 module CDDAIV
   class User
     include DataMapper::Resource
@@ -57,9 +59,14 @@ module CDDAIV
   DataMapper.finalize
 
   module Database
+    include CDDAIV::Log
+
     def self.setup!(uri, migrate: false)
+      log :info, 'Opening database'
+      log :debug, "Database URI '#{uri}'"
       DataMapper.setup(:default, uri)
       if migrate
+        log :debug, 'Migrating database'
         require 'dm-migrations'
         DataMapper.auto_migrate!
       end
