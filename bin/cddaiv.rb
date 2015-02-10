@@ -28,12 +28,15 @@ class CLI < Thor
   desc 'update', 'Update the issues database.'
   method_option :since, type: :string, desc: 'Update since the given date'
   def update
-    CDDAIV::Log.default!(options)
+    cfg = options.dup
+    cfg[:since] = Chronic.parse(cfg[:since]) if cfg[:since]
+
+    CDDAIV::Log.default!(cfg)
 
     require 'cddaiv/sync'
 
-    CDDAIV::Database.setup!(options[:db])
-    CDDAIV::Database.update!(options)
+    CDDAIV::Database.setup!(cfg[:db])
+    CDDAIV::Database.update!(cfg)
   end
 end
 
