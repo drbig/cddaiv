@@ -16,10 +16,13 @@ module CDDAIV
       log :info, 'Updating issues database...'
       opened = 0
       Github.get_issues(since, :open).each do |ri|
-        i = Issue.first_or_create(id: ri.id)
-        opened += 1 unless i.num != 0
-        i.attributes = ri.to_h
-        i.save
+        if i = Issue.get(ri.id)
+          i.attributes = ri.to_h
+        else
+          opened += 1
+          i = Issue.create(ri.to_h)
+        end
+        i.save!
       end
       closed = 0
       Github.get_issues(since, :closed).each do |ri|
@@ -27,7 +30,7 @@ module CDDAIV
           closed += 1 if i.open
           i.attributes = ri.to_h
           i.open = false
-          i.save
+          i.save!
         end
       end
       log :debug, "New: #{opened}, closed: #{closed} issues"

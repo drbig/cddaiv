@@ -3,6 +3,7 @@
 
 require 'digest/sha1'
 require 'dm-core'
+require 'dm-types'
 require 'dm-validations'
 
 require 'cddaiv/log'
@@ -13,14 +14,14 @@ module CDDAIV
 
     property :login, String, key: true, length: 3..32
     property :pass, String, required: true, length: 40
-    property :salt, Integer, required: true
+    property :salt, String, required: true, length: 6
     property :email, String, required: true, format: :email_address, length: 6..64
     property :since, DateTime, default: Proc.new { DateTime.now }, required: true
     property :seen, DateTime
 
     has n, :votes
 
-    def password=(plain)
+    def pass=(plain)
       raise ArgumentError('Password too short') if plain.length < 6
       salt = rand(1_000_000).to_s
       attribute_set(:pass, Digest::SHA1.hexdigest(plain + salt))
@@ -53,6 +54,7 @@ module CDDAIV
     belongs_to :user, key: true
     belongs_to :issue, key: true
 
+    property :dir, Enum[:up, :down], required: true
     property :when, DateTime, default: Proc.new { DateTime.now }, required: true
   end
 

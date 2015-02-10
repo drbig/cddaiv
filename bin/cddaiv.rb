@@ -16,25 +16,24 @@ class CLI < Thor
   class_option :log, type: :string, desc: 'Log to FILE'
 
   desc 'seed', 'Migrate and seed the database.'
+  method_option :user, type: :boolean, default: false, desc: 'Add test user'
   def seed
     CDDAIV::Log.default!(options)
 
     require 'cddaiv/sync'
-
     CDDAIV::Database.setup!(options[:db], migrate: true)
+    CDDAIV::User.new(login: 'test', pass: 'password', email: 'test@localhost').save! if options[:user]
     CDDAIV::Database.update!
   end
 
   desc 'update', 'Update the issues database.'
   method_option :since, type: :string, desc: 'Update since the given date'
   def update
+    CDDAIV::Log.default!(options)
+
     cfg = options.dup
     cfg[:since] = Chronic.parse(cfg[:since]) if cfg[:since]
-
-    CDDAIV::Log.default!(cfg)
-
     require 'cddaiv/sync'
-
     CDDAIV::Database.setup!(cfg[:db])
     CDDAIV::Database.update!(cfg)
   end
@@ -44,7 +43,6 @@ class CLI < Thor
     CDDAIV::Log.default!(verbose: true)
 
     require 'pry'
-
     CDDAIV::Database.setup!(options[:db])
     Pry.binding_for(CDDAIV).pry
   end
@@ -54,9 +52,9 @@ class CLI < Thor
   method_option :port, type: :numeric, default: 8111, desc: 'Port to listen on'
   def webapp
     CDDAIV::Log.default!(options)
+    CDDAIV::Database.setup!(options[:db])
 
     require 'cddaiv/webapp'
-
     CDDAIV::WebApp.run!(options)
   end
 end
