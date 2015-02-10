@@ -38,6 +38,17 @@ class CLI < Thor
     CDDAIV::Database.setup!(cfg[:db])
     CDDAIV::Database.update!(cfg)
   end
+
+  desc 'webapp', 'Run the web interface'
+  method_option :host, type: :string, default: '127.0.0.1', desc: 'Bind hostname or IP address'
+  method_option :port, type: :numeric, default: 8111, desc: 'Port to listen on'
+  def webapp
+    CDDAIV::Log.default!(options)
+
+    require 'cddaiv/webapp'
+
+    CDDAIV::WebApp.run!(options)
+  end
 end
 
 CLI.start(ARGV)

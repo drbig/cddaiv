@@ -21,6 +21,10 @@ module CDDAIV
       @@logger = obj
     end
 
+    def self.logger
+      @@logger
+    end
+
     def self.included(base)
       class << base
         def log(level, msg)
