@@ -39,6 +39,16 @@ class CLI < Thor
     CDDAIV::Database.update!(cfg)
   end
 
+  desc 'console', 'Run Pry console with database set up.'
+  def console
+    CDDAIV::Log.default!(verbose: true)
+
+    require 'pry'
+
+    CDDAIV::Database.setup!(options[:db])
+    Pry.binding_for(CDDAIV).pry
+  end
+
   desc 'webapp', 'Run the web interface'
   method_option :host, type: :string, default: '127.0.0.1', desc: 'Bind hostname or IP address'
   method_option :port, type: :numeric, default: 8111, desc: 'Port to listen on'
