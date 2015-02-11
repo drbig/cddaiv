@@ -22,7 +22,7 @@ module CDDAIV
     has n, :votes
 
     def pass=(plain)
-      raise ArgumentError('Password too short') if plain.length < 6
+      return errors.add(:pass, 'Password too short (min. 6 characters)') if plain.length < 6
       salt = rand(1_000_000).to_s
       attribute_set(:pass, Digest::SHA1.hexdigest(plain + salt))
       attribute_set(:salt, salt)

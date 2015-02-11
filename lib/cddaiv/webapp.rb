@@ -49,17 +49,51 @@ module CDDAIV
 
     get '/top' do
       @issues = Issue.all(open: true, limit: 30, order: [:score.desc]).to_a
-      haml :closed
+      @votes = @issues.map {|i| @user.votes(issue: i).first } if @user
+      haml :top
     end
 
     get '/bottom' do
       @issues = Issue.all(open: true, limit: 30, order: [:score.asc]).to_a
-      haml :closed
+      @votes = @issues.map {|i| @user.votes(issue: i).first } if @user
+      haml :bottom
     end
 
     get '/closed' do
-      @issues = Issue.all(open: false, limit: 30, order: [:from.desc]).to_a
+      @issues = Issue.all(open: false, order: [:until.desc]).to_a
       haml :closed
+    end
+
+    post '/register' do
+      if @user
+        @error = "You're already logged in as '#{@user.login}'."
+        return haml :fail
+      end
+
+      unless params[:login] && params[:passa] && params[:passb] && params[:email]
+        @error = 'You need to fill in everything.'
+        return haml :fail
+      end
+
+      if User.get(params[:login])
+        @error = "Sorry, login '#{params[:login]}' is already taken."
+        return haml :fail
+      end
+
+      unless params[:passa] == params[:passb]
+        @error = 'Password mismatch. Please be more careful.'
+        return haml :fail
+      end
+
+      user = User.new(login: params[:login], pass: params[:passa], email: params[:email])
+      user.seen = DateTime.now
+      unless user.save!
+        @error = user.errors.values.join(',') + '.'
+        return haml :fail
+      end
+      
+      session[:user] = params[:login]
+      redirect @source
     end
 
     post '/login' do
@@ -84,13 +118,11 @@ module CDDAIV
         return haml :fail
       end
 
+      user.seen = DateTime.now
+      user.save!
+
       session[:user] = params[:login]
-      if params[:source]
-        redirect params[:source]
-      else
-        @error = 'No source. It is either an error or you are poking.'
-        return haml :fail
-      end
+      redirect @source
     end
 
     get '/logout' do
@@ -114,6 +146,11 @@ module CDDAIV
         return haml :fail
       end
 
+      unless issue.open
+        @error = 'The issue has been closed.'
+        return haml :fail
+      end
+
       if v = Vote.first(user: @user, issue: issue)
         v.dir == :up ? issue.score -= 1 : issue.score += 1
         v.destroy!
@@ -128,7 +165,29 @@ module CDDAIV
       dir == :up ? issue.score += 1 : issue.score -= 1
       issue.save!
 
-      redirect params[:source]
+      redirect @source
+    end
+
+    get '/user/:login' do
+      unless @profile = User.get(params[:login])
+        @error = 'No such user.'
+        return haml :fail
+      end
+
+      @votes = @profile.votes(limit: 10, order: [:when.desc])
+      haml :user
+    end
+
+    get '/issue/:id' do
+      unless @issue = Issue.get(params[:id])
+        @error = 'No such issue.'
+        return render haml :fail
+      end
+
+      @votes = @issue.votes(order: [:when.desc])
+      @votes_up = @votes.all(dir: :up).count
+      @votes_down = @votes.all(dir: :down).count
+      haml :issue
     end
   end
 end

@@ -4,7 +4,7 @@
     %meta{:charset => "utf-8"}/
     %meta{:content => "IE=edge", "http-equiv" => "X-UA-Compatible"}/
     %meta{:content => "width=device-width, initial-scale=1", :name => "viewport"}/
-    %title CDDA Issue Voter - Error
+    %title CDDA Issue Voter - User profile
     %link{:href => "/css/bootstrap.css", :rel => "stylesheet"}/
     %link{:href => "/css/bootstrap-theme.css", :rel => "stylesheet"}/
     %link{:href => "/css/main.css", :rel => "stylesheet"}/
@@ -38,15 +38,49 @@
             %li
               %a{:href => 'https://github.com/drbig', :target => '_blank'} About
     .container
-      %h3 Something went wrong...
-      %div.alert.alert-danger{:role => 'alert'}
-        %span.glyphicon.glyphicon-exclamation-sign{'aria-hidden' => 'true'}
-        %span.sr-only Error:
-        = @error
-        - if @source
-          %br
-          %br
-          %a.alert-link{:href => @source} Get me back to where I was.
+      %h3= "Profile for user #{@profile.login}"
+      %table.table.table-striped
+        %tr
+          %th Login
+          %td= @profile.login
+        - if @user == @profile
+          %tr
+            %th Email
+            %td= @profile.email
+        %tr
+          %th Since
+          %td= @profile.since.strftime('%Y-%m-%d %H:%M:%S %Z')
+        %tr
+          %th Seen
+          - if @profile.seen
+            %td= @profile.seen.strftime('%Y-%m-%d %H:%M:%S %Z')
+          - else
+            %td Never...
+        %tr
+          %th Votes
+          %td= @profile.votes.count
+      - if @votes.any?
+        %h4 Recent votes
+        %table.table.table-striped
+          %tr
+            %th{:align => 'center'} Vote
+            %th Title
+            %th
+              %span.glyphicon.glyphicon-info-sign
+            %th When
+          - @votes.each do |v|
+            %tr
+              %td{:align => 'center'}
+                - if v.dir == :up
+                  %span.glyphicon.glyphicon-arrow-up{:style => 'color: green'}
+                - else
+                  %span.glyphicon.glyphicon-arrow-down{:style => 'color: red'}
+              %td
+                %a.plain{:href => "https://github.com/CleverRaven/Cataclysm-DDA/issues/#{v.issue.num}", :target => '_blank'}= v.issue.title
+              %td
+                %a.plain{:href => "/issue/#{v.issue.id}"}
+                  %span.glyphicon.glyphicon-search
+              %td= v.when.strftime('%Y-%m-%d %H:%M:%S %Z')
     .container
       .footer
         &copy; Copyright 2015 Piotr S. Staszewski

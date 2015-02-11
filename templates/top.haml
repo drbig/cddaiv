@@ -4,7 +4,7 @@
     %meta{:charset => "utf-8"}/
     %meta{:content => "IE=edge", "http-equiv" => "X-UA-Compatible"}/
     %meta{:content => "width=device-width, initial-scale=1", :name => "viewport"}/
-    %title CDDA Issue Voter - All open issues
+    %title CDDA Issue Voter - Top 30
     %link{:href => "/css/bootstrap.css", :rel => "stylesheet"}/
     %link{:href => "/css/bootstrap-theme.css", :rel => "stylesheet"}/
     %link{:href => "/css/main.css", :rel => "stylesheet"}/
@@ -21,9 +21,9 @@
           %a.navbar-brand{:href => "/"} CDDA IV
         .collapse.navbar-collapse
           %ul.nav.navbar-nav
-            %li.active
-              %a{:href => '/all'} All
             %li
+              %a{:href => '/all'} All
+            %li.active
               %a{:href => '/top'} Top
             %li
               %a{:href => '/bottom'} Bottom
@@ -38,7 +38,7 @@
             %li
               %a{:href => 'https://github.com/drbig', :target => '_blank'} About
     .container
-      %h3 All open issues, by date
+      %h3 Top 30 issues, by score
       %table.table.table-striped
         %tr
           %th{:align => 'center'} Score
@@ -93,7 +93,7 @@
                     %input.form-control{:name => "login", :type => "text", :placeholder => "Login"}
                   .form-group
                     %input.form-control{:name => "pass", :type => "password", :placeholder => "Password"}
-                  %input{:name => "source", :type => "hidden", :value => "/all"}
+                  %input{:name => "source", :type => "hidden", :value => "/top"}
                   %button.btn.btn-success{:type => "submit"} Login
           %div.col-md-6
             %div.panel.panel-default
@@ -108,7 +108,7 @@
                     %input.form-control{:name => "passb", :type => "password", :placeholder => "Password again"}
                   .form-group
                     %input.form-control{:name => "email", :type => "email", :placeholder => "E-Mail"}
-                  %input{:name => "source", :type => "hidden", :value => "/all"}
+                  %input{:name => "source", :type => "hidden", :value => "/top"}
                   %button.btn.btn-success{:type => "submit"} Register
     .container
       .footer

@@ -4,7 +4,7 @@
     %meta{:charset => "utf-8"}/
     %meta{:content => "IE=edge", "http-equiv" => "X-UA-Compatible"}/
     %meta{:content => "width=device-width, initial-scale=1", :name => "viewport"}/
-    %title CDDA Issue Voter - All open issues
+    %title CDDA Issue Voter - All closed issues
     %link{:href => "/css/bootstrap.css", :rel => "stylesheet"}/
     %link{:href => "/css/bootstrap-theme.css", :rel => "stylesheet"}/
     %link{:href => "/css/main.css", :rel => "stylesheet"}/
@@ -21,13 +21,13 @@
           %a.navbar-brand{:href => "/"} CDDA IV
         .collapse.navbar-collapse
           %ul.nav.navbar-nav
-            %li.active
+            %li
               %a{:href => '/all'} All
             %li
               %a{:href => '/top'} Top
             %li
               %a{:href => '/bottom'} Bottom
-            %li
+            %li.active
               %a{:href => '/closed'} Closed
           %ul.nav.navbar-nav.navbar-right
             - if @user
@@ -38,47 +38,23 @@
             %li
               %a{:href => 'https://github.com/drbig', :target => '_blank'} About
     .container
-      %h3 All open issues, by date
+      %h3 All closed issues, by date
       %table.table.table-striped
         %tr
           %th{:align => 'center'} Score
-          %th{:align => 'center'} Vote
           %th Title
           %th
             %span.glyphicon.glyphicon-info-sign
-          %th Opened
+          %th Closed
         - @issues.each_with_index do |i, n|
           %tr
             %td{:align => 'center'}= i.score
-            %td{:align => 'center'}
-              - if @user
-                - if v = @votes[n]
-                  - if v.dir == :up
-                    %a.plain{:href => "/vote/up/#{i.id}/all", :style => 'color: green'}
-                      %span.glyphicon.glyphicon-arrow-up
-                  - else
-                    %a.plain{:href => "/vote/up/#{i.id}/all"}
-                      %span.glyphicon.glyphicon-arrow-up
-                  - if v.dir == :down
-                    %a.plain{:href => "/vote/down/#{i.id}/all", :style => 'color: red'}
-                      %span.glyphicon.glyphicon-arrow-down
-                  - else
-                    %a.plain{:href => "/vote/down/#{i.id}/all"}
-                      %span.glyphicon.glyphicon-arrow-down
-                - else
-                  %a.plain{:href => "/vote/up/#{i.id}/all"}
-                    %span.glyphicon.glyphicon-arrow-up
-                  %a.plain{:href => "/vote/down/#{i.id}/all"}
-                    %span.glyphicon.glyphicon-arrow-down
-              - else
-                %a.plain{:href => "#login"}
-                  %span.glyphicon.glyphicon-ban-circle
             %td
               %a.plain{:href => "https://github.com/CleverRaven/Cataclysm-DDA/issues/#{i.num}", :target => '_blank'}= i.title
             %td
               %a.plain{:href => "/issue/#{i.id}"}
                 %span.glyphicon.glyphicon-search
-            %td= i.from.strftime('%Y-%m-%d %H:%M')
+            %td= i.until.strftime('%Y-%m-%d %H:%M')
     - unless @user
       .container
         %a{:name => 'login'}
@@ -93,7 +69,7 @@
                     %input.form-control{:name => "login", :type => "text", :placeholder => "Login"}
                   .form-group
                     %input.form-control{:name => "pass", :type => "password", :placeholder => "Password"}
-                  %input{:name => "source", :type => "hidden", :value => "/all"}
+                  %input{:name => "source", :type => "hidden", :value => "/closed"}
                   %button.btn.btn-success{:type => "submit"} Login
           %div.col-md-6
             %div.panel.panel-default
@@ -108,7 +84,7 @@
                     %input.form-control{:name => "passb", :type => "password", :placeholder => "Password again"}
                   .form-group
                     %input.form-control{:name => "email", :type => "email", :placeholder => "E-Mail"}
-                  %input{:name => "source", :type => "hidden", :value => "/all"}
+                  %input{:name => "source", :type => "hidden", :value => "/closed"}
                   %button.btn.btn-success{:type => "submit"} Register
     .container
       .footer

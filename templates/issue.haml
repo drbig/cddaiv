@@ -1,0 +1,92 @@
+!!!
+%html{:lang => "en"}
+  %head
+    %meta{:charset => "utf-8"}/
+    %meta{:content => "IE=edge", "http-equiv" => "X-UA-Compatible"}/
+    %meta{:content => "width=device-width, initial-scale=1", :name => "viewport"}/
+    %title CDDA Issue Voter - Issue details
+    %link{:href => "/css/bootstrap.css", :rel => "stylesheet"}/
+    %link{:href => "/css/bootstrap-theme.css", :rel => "stylesheet"}/
+    %link{:href => "/css/main.css", :rel => "stylesheet"}/
+    %script{:src => "/js/bootstrap.js"}
+  %body
+    .navbar.navbar-inverse.navbar-fixed-top{:role => "navigation"}
+      .container
+        .navbar-header
+          %button.navbar-toggle{"data-target" => ".navbar-collapse", "data-toggle" => "collapse", :type => "button"}
+            %span.sr-only Toggle navigation
+            %span.icon-bar
+            %span.icon-bar
+            %span.icon-bar
+          %a.navbar-brand{:href => "/"} CDDA IV
+        .collapse.navbar-collapse
+          %ul.nav.navbar-nav
+            %li
+              %a{:href => '/all'} All
+            %li
+              %a{:href => '/top'} Top
+            %li
+              %a{:href => '/bottom'} Bottom
+            %li
+              %a{:href => '/closed'} Closed
+          %ul.nav.navbar-nav.navbar-right
+            - if @user
+              %li
+                %a{:href => "/user/#{@user.login}"}= @user.login
+              %li
+                %a{:href => '/logout'} Logout
+            %li
+              %a{:href => 'https://github.com/drbig', :target => '_blank'} About
+    .container
+      %h3= "Details for issue ##{@issue.num}"
+      %table.table.table-striped
+        %tr
+          %th Title
+          %td
+            %a.plain{:href => "https://github.com/CleverRaven/Cataclysm-DDA/issues/#{@issue.num}", :target => '_blank'}= @issue.title
+        %tr
+          %th Opened
+          %td= @issue.from.strftime('%Y-%m-%d %H:%M:%S %Z')
+        - unless @issue.open
+          %tr
+            %th Closed
+            %td= @issue.until.strftime('%Y-%m-%d %H:%M:%S %Z')
+        %tr
+          %th Votes
+          %td
+            - if @votes_up > 0
+              %span{:style => 'color: green'}= @votes_up
+            - else
+              0
+            = ' - '
+            - if @votes_down > 0
+              %span{:style => 'color: red'}= @votes_down
+            - else
+              0
+            = ' = '
+            - if @issue.score > 0
+              %span{:style => 'color: green'}= @issue.score
+            - elsif @issue.score < 0
+              %span{:style => 'color: red'}= @issue.score
+            - else
+              = @issue.score
+      - if @votes.any?
+        %h4 All votes
+        %table.table.table-striped
+          %tr
+            %th Vote
+            %th By
+            %th When
+          - @votes.each do |v|
+            %tr
+              %td
+                - if v.dir == :up
+                  %span.glyphicon.glyphicon-arrow-up{:style => 'color: green'}
+                - else
+                  %span.glyphicon.glyphicon-arrow-down{:style => 'color: red'}
+              %td
+                %a.plain{:href => "/user/#{v.user.login}"}= v.user.login
+              %td= v.when.strftime('%Y-%m-%d %H:%M:%S %Z')
+    .container
+      .footer
+        &copy; Copyright 2015 Piotr S. Staszewski
