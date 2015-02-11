@@ -9,9 +9,10 @@ require 'thor'
 
 require 'cddaiv/model'
 require 'cddaiv/log'
+require 'cddaiv/version'
 
 class CLI < Thor
-  class_option :db, type: :string, default: 'sqlite://cddaiv.bin', desc: 'Database URI'
+  class_option :db, type: :string, default: 'sqlite:///tmp/cddaiv.bin', desc: 'Database URI'
   class_option :verbose, type: :boolean, default: false, desc: 'Enable debug logging'
   class_option :log, type: :string, desc: 'Log to FILE'
 
@@ -56,6 +57,11 @@ class CLI < Thor
 
     require 'cddaiv/webapp'
     CDDAIV::WebApp.run!(options)
+  end
+
+  desc 'version', 'Show version and exit'
+  def version
+    puts "CDDA IV #{CDDAIV::VERSION} - https://github.com/drbig/cddaiv"
   end
 end
 
