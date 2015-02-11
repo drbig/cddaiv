@@ -96,6 +96,41 @@ module CDDAIV
       redirect @source
     end
 
+    post '/update' do
+      unless @user
+        @error = 'Not logged in.'
+        return haml :fail
+      end
+
+      unless params[:pass] && (params[:email] || (params[:passa] && params[:passb]))
+        @error = 'What were you expecting to achieve?'
+        return haml :fail
+      end
+
+      unless @user.valid_pass? params[:pass]
+        @error = 'Access denied.'
+        return haml :fail
+      end
+
+      if params[:passa]
+        if params[:passa] != params[:passb]
+          @error = 'New password mismatch. Please be more careful.'
+          return haml :fail
+        end
+
+        @user.pass = params[:passa]
+      end
+
+      @user.email = params[:email] if params[:email]
+
+      unless @user.save!
+        @error = @user.errors.values.join(',') + '.'
+        return haml :fail
+      end
+
+      redirect "/user/#{@user.login}"
+    end
+
     post '/login' do
       if @user
         @error = "You're already logged in as '#{@user.login}'."
@@ -174,7 +209,9 @@ module CDDAIV
         return haml :fail
       end
 
-      @votes = @profile.votes(limit: 10, order: [:when.desc])
+      query = {order: [:when.desc]}
+      query[:limit] = 10 unless @user == @profile
+      @votes = @profile.votes(query)
       haml :user
     end
 

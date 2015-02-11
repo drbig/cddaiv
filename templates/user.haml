@@ -60,7 +60,10 @@
           %th Votes
           %td= @profile.votes.count
       - if @votes.any?
-        %h4 Recent votes
+        - if @user == @profile
+          %h4 All votes
+        - else
+          %h4 Recent votes
         %table.table.table-striped
           %tr
             %th{:align => 'center'} Vote
@@ -81,6 +84,22 @@
                 %a.plain{:href => "/issue/#{v.issue.id}"}
                   %span.glyphicon.glyphicon-search
               %td= v.when.strftime('%Y-%m-%d %H:%M:%S %Z')
+      - if @user == @profile
+        %div.row
+          %div.col-md-6
+            %div.panel.panel-default
+              %div.panel-heading Update details
+              %div.panel-body
+                %form{:role => "form", :action => "/update", :method => "post"}
+                  .form-group
+                    %input.form-control{:name => "pass", :type => "password", :placeholder => "Current password"}
+                  .form-group
+                    %input.form-control{:name => "passa", :type => "password", :placeholder => "New password"}
+                  .form-group
+                    %input.form-control{:name => "passb", :type => "password", :placeholder => "New password again"}
+                  .form-group
+                    %input.form-control{:name => "email", :type => "email", :placeholder => "New E-Mail"}
+                  %button.btn.btn-success{:type => "submit"} Update
     .container
       .footer
         &copy; Copyright 2015 Piotr S. Staszewski
