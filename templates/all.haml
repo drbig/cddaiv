@@ -54,27 +54,28 @@
               - if @user
                 - if v = @votes[n]
                   - if v.dir == :up
-                    %a.plain{:href => "/vote/up/#{i.id}/all", :style => 'color: green'}
+                    %a.plain{:href => "/vote/up/#{i.id}/all##{i.id}", :style => 'color: green'}
                       %span.glyphicon.glyphicon-arrow-up
                   - else
-                    %a.plain{:href => "/vote/up/#{i.id}/all"}
+                    %a.plain{:href => "/vote/up/#{i.id}/all##{i.id}"}
                       %span.glyphicon.glyphicon-arrow-up
                   - if v.dir == :down
-                    %a.plain{:href => "/vote/down/#{i.id}/all", :style => 'color: red'}
+                    %a.plain{:href => "/vote/down/#{i.id}/all##{i.id}", :style => 'color: red'}
                       %span.glyphicon.glyphicon-arrow-down
                   - else
-                    %a.plain{:href => "/vote/down/#{i.id}/all"}
+                    %a.plain{:href => "/vote/down/#{i.id}/all##{i.id}"}
                       %span.glyphicon.glyphicon-arrow-down
                 - else
-                  %a.plain{:href => "/vote/up/#{i.id}/all"}
+                  %a.plain{:href => "/vote/up/#{i.id}/all##{i.id}"}
                     %span.glyphicon.glyphicon-arrow-up
-                  %a.plain{:href => "/vote/down/#{i.id}/all"}
+                  %a.plain{:href => "/vote/down/#{i.id}/all##{i.id}"}
                     %span.glyphicon.glyphicon-arrow-down
               - else
                 %a.plain{:href => "#login"}
                   %span.glyphicon.glyphicon-ban-circle
             %td
               %a.plain{:href => "https://github.com/CleverRaven/Cataclysm-DDA/issues/#{i.num}", :target => '_blank'}= i.title
+              %a.anchor{:name => "#{i.id}"} &nbsp;
             %td
               %a.plain{:href => "/issue/#{i.id}"}
                 %span.glyphicon.glyphicon-search

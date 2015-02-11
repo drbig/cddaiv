@@ -1,0 +1,15 @@
+body {
+  padding-top: 50px;
+}
+.section {
+  padding: 40px 15px;
+}
+a.plain {
+  text-decoration: none;
+  color: black;
+}
+a.anchor {
+  display: inline-block;
+  position: relative;
+  top: -64px;
+}
