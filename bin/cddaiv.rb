@@ -48,7 +48,7 @@ class CLI < Thor
     Pry.binding_for(CDDAIV).pry
   end
 
-  desc 'webapp', 'Run the web interface'
+  desc 'webapp', 'Run the web interface.'
   method_option :host, type: :string, default: '127.0.0.1', desc: 'Bind hostname or IP address'
   method_option :port, type: :numeric, default: 8111, desc: 'Port to listen on'
   def webapp
@@ -59,7 +59,7 @@ class CLI < Thor
     CDDAIV::WebApp.run!(options)
   end
 
-  desc 'version', 'Show version and exit'
+  desc 'version', 'Show version and exit.'
   def version
     puts "CDDA IV #{CDDAIV::VERSION} - https://github.com/drbig/cddaiv"
   end
