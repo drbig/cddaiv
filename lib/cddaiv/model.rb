@@ -16,22 +16,39 @@ module CDDAIV
     property :pass, String, required: true, length: 40
     property :salt, String, required: true, length: 6
     property :email, String, required: true, format: :email_address, length: 6..64
+    property :verified, Boolean, default: false, required: true
     property :since, DateTime, default: Proc.new { DateTime.now }, required: true
     property :seen, DateTime
 
     has n, :votes
+    has 1, :token
 
     def pass=(plain)
       return errors.add(:pass, 'Password too short (min. 6 characters)') if plain.length < 6
-      salt = rand(1_000_000).to_s
+      self.salt = rand(1_000_000).to_s
+      # we need this otherwise we get a lovely loop of pass=() calls :)
       attribute_set(:pass, Digest::SHA1.hexdigest(plain + salt))
-      attribute_set(:salt, salt)
     end
 
     def valid_pass?(plain)
-      salt = attribute_get(:salt)
-      pass = attribute_get(:pass)
       Digest::SHA1.hexdigest(plain + salt) == pass
+    end
+  end
+
+  class Token
+    include DataMapper::Resource
+
+    property :id, Serial, key: true
+    property :value, String, required: true, length: 40
+    property :when, DateTime, default: Proc.new { DateTime.now }, required: true
+
+    belongs_to :user
+
+    # datamapper is retarded too
+    # will need to call this explicitly before saving
+    def generate
+      salt = rand(1_000_000).to_s
+      self.value = Digest::SHA1.hexdigest(user.login + user.email + salt)
     end
   end
 
