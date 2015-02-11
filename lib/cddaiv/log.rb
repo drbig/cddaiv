@@ -8,6 +8,13 @@ module CDDAIV
     def self.default!(opts = {})
       require 'logger'
 
+      # fix Sinatra logging retardation
+      Logger.class_eval do
+        def puts(msg)
+          @logdev.puts(msg) if @logedv
+        end
+      end
+
       @@logger = Logger.new(opts[:log] || STDOUT)
       @@logger.level = opts[:verbose] ? Logger::DEBUG : Logger::INFO
       @@logger.formatter = Proc.new do |s, d, p, m|

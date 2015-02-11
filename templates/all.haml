@@ -8,6 +8,7 @@
     %link{:href => "/css/bootstrap.css", :rel => "stylesheet"}/
     %link{:href => "/css/bootstrap-theme.css", :rel => "stylesheet"}/
     %link{:href => "/css/main.css", :rel => "stylesheet"}/
+    %script{:src => "/js/bootstrap.js"}
   %body
     .navbar.navbar-inverse.navbar-fixed-top{:role => "navigation"}
       .container
@@ -21,21 +22,61 @@
         .collapse.navbar-collapse
           %ul.nav.navbar-nav
             %li.active
-              %a All
+              %a{:href => '/all'} All
             %li
-              %a Top
+              %a{:href => '/top'} Top
             %li
-              %a Bottom
+              %a{:href => '/bottom'} Bottom
             %li
-              %a Closed
+              %a{:href => '/closed'} Closed
           %ul.nav.navbar-nav.navbar-right
-            - if user
+            - if @user
               %li
-                %a= user
+                %a{:href => "/user/#{@user.login}"}= @user.login
+              %li
+                %a{:href => '/logout'} Logout
             %li
               %a{:href => '/about'} About
-    .container.section
-      - unless user
+    .container
+      %h3 All open issues, by date
+      %table.table.table-striped
+        %tr
+          %th Score
+          %th Vote
+          %th Title
+          %th Opened
+        - @issues.each_with_index do |i, n|
+          %tr
+            %td= i.score
+            %td
+              - if @user
+                - if v = @votes[n]
+                  - if v.dir == :up
+                    %a{:href => "/vote/up/#{i.id}/all", :style => 'color: red'}
+                      %span.glyphicon.glyphicon-arrow-up
+                  - else
+                    %a{:href => "/vote/up/#{i.id}/all"}
+                      %span.glyphicon.glyphicon-arrow-up
+                  - if v.dir == :down
+                    %a{:href => "/vote/down/#{i.id}/all", :style => 'color: red'}
+                      %span.glyphicon.glyphicon-arrow-down
+                  - else
+                    %a{:href => "/vote/down/#{i.id}/all"}
+                      %span.glyphicon.glyphicon-arrow-down
+                - else
+                  %a{:href => "/vote/up/#{i.id}/all"}
+                    %span.glyphicon.glyphicon-arrow-up
+                  %a{:href => "/vote/down/#{i.id}/all"}
+                    %span.glyphicon.glyphicon-arrow-down
+              - else
+                %a{:href => "#login"}
+                  %span.glyphicon.glyphicon-ban-circle
+            %td= i.title
+            %td= i.from.strftime('%Y-%m-%d %H:%M')
+    - unless @user
+      .container
+        %a{:name => 'login'}
+        %h4 You're not logged in. That means no voting for you.
         %div.row
           %div.col-md-6
             %div.panel.panel-default
@@ -46,6 +87,7 @@
                     %input.form-control{:name => "login", :type => "text", :placeholder => "Login"}
                   .form-group
                     %input.form-control{:name => "pass", :type => "password", :placeholder => "Password"}
+                  %input{:name => "source", :type => "hidden", :value => "/all"}
                   %button.btn.btn-success{:type => "submit"} Login
           %div.col-md-6
             %div.panel.panel-default
@@ -60,10 +102,8 @@
                     %input.form-control{:name => "passb", :type => "password", :placeholder => "Password again"}
                   .form-group
                     %input.form-control{:name => "email", :type => "email", :placeholder => "E-Mail"}
+                  %input{:name => "source", :type => "hidden", :value => "/all"}
                   %button.btn.btn-success{:type => "submit"} Register
- 
     .container
       .footer
         &copy; Copyright 2015 Piotr S. Staszewski
-    %script{:src => "/js/jquery-2.1.1.js"}
-    %script{:src => "/js/bootstrap.js"}
