@@ -5,8 +5,9 @@
     %meta{:content => "IE=edge", "http-equiv" => "X-UA-Compatible"}/
     %meta{:content => "width=device-width, initial-scale=1", :name => "viewport"}/
     %title CDDA Issue Voter - Issue details
-    %link{:href => "/css/bootstrap.css", :rel => "stylesheet"}/
-    %link{:href => "/css/bootstrap-theme.css", :rel => "stylesheet"}/
+    %link{:href => "/css/bootstrap.min.css", :rel => "stylesheet"}/
+    %link{:href => "/css/bootstrap-theme.min.css", :rel => "stylesheet"}/
+    %link{:href => "/css/octicons.css", :rel => "stylesheet"}/
     %link{:href => "/css/main.css", :rel => "stylesheet"}/
     %script{:src => "/js/bootstrap.js"}
   %body
@@ -45,8 +46,23 @@
           %td
             %a.plain{:href => "https://github.com/CleverRaven/Cataclysm-DDA/issues/#{@issue.num}", :target => '_blank'}= @issue.title
         %tr
+          %th Type
+          %td
+            - if @issue.type == :pr
+              %span.octicon.octicon-git-pull-request
+              Pull Request
+            - else
+              - if @issue.open
+                %span.octicon.octicon-issue-opened
+              - else
+                %span.octicon.octicon-issue-closed
+              Issue
+        %tr
           %th Opened
           %td= @issue.from.strftime('%Y-%m-%d %H:%M:%S %Z')
+        %tr
+          %th Updated
+          %td= @issue.updated.strftime('%Y-%m-%d %H:%M:%S %Z')
         - unless @issue.open
           %tr
             %th Closed

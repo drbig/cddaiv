@@ -5,8 +5,9 @@
     %meta{:content => "IE=edge", "http-equiv" => "X-UA-Compatible"}/
     %meta{:content => "width=device-width, initial-scale=1", :name => "viewport"}/
     %title CDDA Issue Voter - All closed issues
-    %link{:href => "/css/bootstrap.css", :rel => "stylesheet"}/
-    %link{:href => "/css/bootstrap-theme.css", :rel => "stylesheet"}/
+    %link{:href => "/css/bootstrap.min.css", :rel => "stylesheet"}/
+    %link{:href => "/css/bootstrap-theme.min.css", :rel => "stylesheet"}/
+    %link{:href => "/css/octicons.css", :rel => "stylesheet"}/
     %link{:href => "/css/main.css", :rel => "stylesheet"}/
     %script{:src => "/js/bootstrap.js"}
   %body
@@ -54,6 +55,10 @@
             %td
               %a.plain{:href => "/issue/#{i.id}"}
                 %span.glyphicon.glyphicon-search
+              - if i.type == :pr
+                %span.octicon.octicon-git-pull-request
+              - else
+                %span.octicon.octicon-issue-closed
             %td= i.until.strftime('%Y-%m-%d %H:%M')
     - unless @user
       .container
