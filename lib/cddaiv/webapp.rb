@@ -10,6 +10,7 @@ require 'cddaiv/log'
 require 'cddaiv/model'
 require 'cddaiv/mailer'
 require 'cddaiv/scheduler'
+require 'cddaiv/version'
 
 # fix Sinatra logging retardation
 class String
@@ -117,7 +118,7 @@ CDDA IV Mailer
       database = {issues: Issue.count, votes: Vote.count, users: User.count}
       mailer = CDDAIV::Mailer.status
       scheduler = CDDAIV::Scheduler.status
-      haml :status, locals: {database: database, mailer: mailer, scheduler: scheduler}
+      haml :status, locals: {database: database, mailer: mailer, scheduler: scheduler, ver: CDDAIV::VERSION}
     end
 
     post '/register' do
