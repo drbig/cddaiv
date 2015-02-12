@@ -11,6 +11,10 @@ require 'cddaiv/model'
 require 'cddaiv/log'
 require 'cddaiv/version'
 
+# for better output
+STDOUT.sync = true
+STDERR.sync = true
+
 class CLI < Thor
   class_option :db, type: :string, default: 'sqlite:///tmp/cddaiv.bin', desc: 'Database URI'
   class_option :verbose, type: :boolean, default: false, desc: 'Enable debug logging'
@@ -67,8 +71,11 @@ class CLI < Thor
     require 'cddaiv/scheduler'
     CDDAIV::Scheduler.run!
 
+    # fix for Thin
+    cfg = options.dup
+    cfg[:bind] = cfg[:host]
     require 'cddaiv/webapp'
-    CDDAIV::WebApp.run!(options)
+    CDDAIV::WebApp.run!(cfg)
   end
 
   desc 'version', 'Show version and exit.'
