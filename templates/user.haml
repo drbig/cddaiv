@@ -48,6 +48,9 @@
             %th Email
             %td= @profile.email
         %tr
+          %th Verified
+          %td= @profile.verified ? 'Yes' : 'No'
+        %tr
           %th Since
           %td= @profile.since.strftime('%Y-%m-%d %H:%M:%S %Z')
         %tr

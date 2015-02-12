@@ -23,7 +23,7 @@ class CLI < Thor
 
     require 'cddaiv/sync'
     CDDAIV::Database.setup!(options[:db], migrate: true)
-    CDDAIV::User.new(login: 'test', pass: 'password', email: 'test@localhost').save! if options[:user]
+    CDDAIV::User.new(login: 'test', pass: 'password', email: 'test@localhost', verified: true).save! if options[:user]
     CDDAIV::Database.update!
   end
 
@@ -54,6 +54,15 @@ class CLI < Thor
   def webapp
     CDDAIV::Log.default!(options)
     CDDAIV::Database.setup!(options[:db])
+
+    require 'cddaiv/mailer'
+    # this is very temporary
+    CDDAIV::Mailer.options = {
+      from: 'drbig@kaer.eu.org',
+      via: :smtp,
+      via_options: {address: '78.8.120.130'}
+    }
+    CDDAIV::Mailer.run!
 
     require 'cddaiv/webapp'
     CDDAIV::WebApp.run!(options)

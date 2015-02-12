@@ -8,10 +8,11 @@ require 'json'
 
 require 'cddaiv/log'
 require 'cddaiv/model'
+require 'cddaiv/mailer'
 
 # fix Sinatra logging retardation
 class String
-  def join; self; end
+  def join(*_); self; end
 end
 
 module CDDAIV
@@ -28,6 +29,29 @@ module CDDAIV
       set :views, File.join(settings.root, 'templates')
       set :session_secret, 'whatever for now'
       set :haml, ugly: true
+    end
+
+    helpers do
+      def email_verification(user)
+        body = <<-eob
+Hello #{user.login}!
+
+You have registered/updated an account at the CDDA IV, please follow the link below:
+
+http://#{request.host_with_port}/verify/#{user.login}/#{user.token.value}
+
+to verify your account (you don't need to be logged in).
+
+If you haven't registered with the CDDA IV just ignore this email.
+If you think this is abuse or have other questions please contact the
+admin by replying to this mail.
+
+Best regards,
+CDDA IV Mailer
+        eob
+
+        Mailer.send(user.email, 'CDDA IV - Account verification', body)
+      end
     end
 
     before do
@@ -91,7 +115,25 @@ module CDDAIV
         @error = user.errors.values.join(',') + '.'
         return haml :fail
       end
-      
+
+      token = Token.new(user: user)
+      # have to do it manually, 'cause dm is retarted
+      token.generate
+      unless token.save!
+        @error = 'Failed to save the activation token.'
+        @error += '<br>Failed to destroy the user.' unless user.destroy!
+        return haml :fail
+      end
+
+      user.token = token
+      unless user.save!
+        @error = 'Failed to save the user with token.'
+        @error += '<br>Failed to destroy the user.' unless user.destroy!
+        return haml :fail
+      end
+
+      email_verification(user)
+
       session[:user] = params[:login]
       redirect @source
     end
@@ -121,14 +163,70 @@ module CDDAIV
         @user.pass = params[:passa]
       end
 
-      @user.email = params[:email] if params[:email]
+      if params[:email]
+        @user.email = params[:email] 
+        @user.verified = false
+      end
 
       unless @user.save!
         @error = @user.errors.values.join(',') + '.'
         return haml :fail
       end
 
+      if params[:email]
+        @user.token.destroy! if @user.token
+
+        token = Token.new(user: @user)
+        # have to do it manually, 'cause dm is retarted
+        token.generate
+
+        unless token.save!
+          @error = 'Failed to save the activation token.'
+          return haml :fail
+        end
+
+        @user.token = token
+        unless @user.save!
+          @error = 'Failed to save the user with token.'
+          return haml :fail
+        end
+
+        email_verification(user)
+      end
+
       redirect "/user/#{@user.login}"
+    end
+
+    get '/verify/:login/:token' do
+      unless user = User.get(params[:login])
+        @error = 'No such user.'
+        return haml :fail
+      end
+
+      if user.verified
+        @error = 'Email already verified.'
+        @error += '<br>Dangling token found, please contact the admin.' if user.token
+        return haml :fail
+      end
+
+      unless user.token
+        @error = 'No token found, please contact the admin.'
+        return haml :fail
+      end
+
+      unless user.token.value == params[:token]
+        @error = 'Wrong verification code.'
+        return haml :fail
+      end
+
+      user.token.destroy!
+      user.verified = true
+      unless user.save!
+        @error = user.errors.values.join(',') + '.'
+        return haml :fail
+      end
+
+      redirect "/user/#{user.login}"
     end
 
     post '/login' do
@@ -142,8 +240,7 @@ module CDDAIV
         return haml :fail
       end
 
-      user = User.get(params[:login])
-      unless user
+      unless user = User.get(params[:login])
         @error = 'Access denied.'
         return haml :fail
       end
@@ -190,7 +287,7 @@ module CDDAIV
         v.dir == :up ? issue.score -= 1 : issue.score += 1
         v.destroy!
         issue.save!
-        
+
         return redirect params[:source] if v.dir == dir
       end
 

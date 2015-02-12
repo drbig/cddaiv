@@ -20,3 +20,6 @@ gem 'pry'
 gem 'sinatra'
 gem 'haml'
 gem 'json'
+
+# Mailer
+gem 'pony'
