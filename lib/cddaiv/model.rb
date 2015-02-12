@@ -58,9 +58,11 @@ module CDDAIV
     property :id, Integer, key: true
     property :num, Integer, required: true
     property :title, String, required: true, length: 1..256
+    property :type, Enum[:issue, :pr], required: true
     property :open, Boolean, default: true, required: true
     property :from, DateTime, required: true
     property :until, DateTime
+    property :updated, DateTime, required: true
     property :score, Integer, default: 0, required: true
 
     has n, :votes

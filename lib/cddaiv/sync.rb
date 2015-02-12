@@ -21,8 +21,8 @@ module CDDAIV
       updated = 0
       Github.get_issues(since, :open).each do |ri|
         if i = Issue.get(ri.id)
-          if i.title != ri.title
-            i.update(title: ri.title) ? updated += 1 : log(:error, "Couldn't update issue #{i.id}")
+          if (i.title != ri.title) || (i.updated != ri.updated)
+            i.update(title: ri.title, updated: ri.updated) ? updated += 1 : log(:error, "Couldn't update issue #{i.id}")
           end
         else
           i = Issue.new(ri.to_h)
@@ -32,8 +32,8 @@ module CDDAIV
       closed = 0
       Github.get_issues(since, :closed).each do |ri|
         if i = Issue.get(ri.id)
-          if i.title != ri.title
-            i.update(title: ri.title) ? updated += 1 : log(:error, "Couldn't update issue #{i.id}")
+          if (i.title != ri.title) || (i.updated != ri.updated)
+            i.update(title: ri.title, updated: ri.updated) ? updated += 1 : log(:error, "Couldn't update issue #{i.id}")
           end
           if i.open
             i.update(open: false) ? closed += 1 : log(:error, "Couldn't update issue #{i.id}")

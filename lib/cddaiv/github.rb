@@ -14,7 +14,7 @@ module CDDAIV
     REPO    = 'CleverRaven/Cataclysm-DDA'
     ISSUES  = "https://api.github.com/repos/#{REPO}/issues"
 
-    RawIssue = Struct.new(:id, :num, :title, :open, :from, :until)
+    RawIssue = Struct.new(:id, :num, :title, :type, :open, :from, :until, :updated)
 
     def self.get_issues(since, state = nil)
       uri = Addressable::URI.parse(ISSUES)
@@ -25,9 +25,12 @@ module CDDAIV
 
       log :debug, 'Fetching issues from GitHub'
       issues = get(uri.to_s).collect do |e|
-        RawIssue.new(e['id'], e['number'], e['title'], e['state'] == 'open',
+        RawIssue.new(e['id'], e['number'], e['title'],
+                     e.has_key?('pull_request') ? :pr : :issue,
+                     e['state'] == 'open',
                      DateTime.parse(e['created_at']),
-                     e['closed_at'] ? DateTime.parse(e['closed_at']) : nil)
+                     e['closed_at'] ? DateTime.parse(e['closed_at']) : nil,
+                     DateTime.parse(e['updated_at']))
       end
       log :debug, "Fetched #{issues.length} issues"
       issues
