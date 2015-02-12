@@ -9,11 +9,15 @@ require 'cddaiv/model'
 
 module CDDAIV
   module Database
-    @last_update = nil
+    @@last_update = nil
+
+    def self.last_update
+      @@last_update
+    end
 
     # Sync issue list with GitHub
     def self.update!(opts = {})
-      since = opts[:since] || @last_update
+      since = opts[:since] || @@last_update
       start = Time.now
 
       log :info, 'Updating issues database...'
@@ -43,7 +47,7 @@ module CDDAIV
       log :debug, "New: #{opened}, updated: #{updated}, closed: #{closed} issues"
       log :info, 'Database update finished'
 
-      @last_update = start
+      @@last_update = start
     end
 
     # Remove closed issues

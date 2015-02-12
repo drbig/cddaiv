@@ -23,3 +23,6 @@ gem 'json'
 
 # Mailer
 gem 'pony'
+
+# Scheduler
+gem 'rufus-scheduler'

@@ -64,6 +64,9 @@ class CLI < Thor
     }
     CDDAIV::Mailer.run!
 
+    require 'cddaiv/scheduler'
+    CDDAIV::Scheduler.run!
+
     require 'cddaiv/webapp'
     CDDAIV::WebApp.run!(options)
   end

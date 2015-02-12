@@ -31,10 +31,16 @@
               %a{:href => '/closed'} Closed
           %ul.nav.navbar-nav.navbar-right
             - if @user
-              %li
-                %a{:href => "/user/#{@user.login}"}= @user.login
+              - if @user == @profile
+                %li.active
+                  %a{:href => "/user/#{@user.login}"}= @user.login
+              - else
+                %li
+                  %a{:href => "/user/#{@user.login}"}= @user.login
               %li
                 %a{:href => '/logout'} Logout
+            %li
+              %a{:href => '/status'} Status
             %li
               %a{:href => 'https://github.com/drbig', :target => '_blank'} About
     .container

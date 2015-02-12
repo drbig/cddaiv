@@ -4,7 +4,7 @@
     %meta{:charset => "utf-8"}/
     %meta{:content => "IE=edge", "http-equiv" => "X-UA-Compatible"}/
     %meta{:content => "width=device-width, initial-scale=1", :name => "viewport"}/
-    %title CDDA Issue Voter - Error
+    %title CDDA Issue Voter - Status
     %link{:href => "/css/bootstrap.min.css", :rel => "stylesheet"}/
     %link{:href => "/css/bootstrap-theme.min.css", :rel => "stylesheet"}/
     %link{:href => "/css/main.css", :rel => "stylesheet"}/
@@ -35,20 +35,43 @@
                 %a{:href => "/user/#{@user.login}"}= @user.login
               %li
                 %a{:href => '/logout'} Logout
-            %li
+            %li.active
               %a{:href => '/status'} Status
             %li
               %a{:href => 'https://github.com/drbig', :target => '_blank'} About
     .container
-      %h3 Something went wrong...
-      %div.alert.alert-danger{:role => 'alert'}
-        %span.glyphicon.glyphicon-exclamation-sign{'aria-hidden' => 'true'}
-        %span.sr-only Error:
-        = @error
-        - if @source
-          %br
-          %br
-          %a.alert-link{:href => @source} Get me back to where I was.
+      %h3 Application status
+      %h4 Database
+      %table.table.table-striped
+        %tr
+          %th Issues
+          %th Votes
+          %th Users
+        %tr
+          %td= database[:issues]
+          %td= database[:votes]
+          %td= database[:users]
+      %h4 Mailer
+      %table.table.table-striped
+        %tr
+          %th State
+          %th Sent
+          %th Errors
+        %tr
+          %td= mailer.state
+          %td= mailer.sent
+          %td= mailer.errors
+      %h4 Scheduler
+      %table.table.table-striped
+        %tr
+          %th Job
+          %th Last
+          %th Next
+        - scheduler.each do |j|
+          %tr
+            %td= j.name
+            %td= j.last
+            %td= j.next
     .container
       .footer
         &copy; Copyright 2015 Piotr S. Staszewski

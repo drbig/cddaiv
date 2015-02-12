@@ -10,10 +10,13 @@ module CDDAIV
   module Mailer
     include CDDAIV::Log
 
+    Status = Struct.new(:state, :sent, :errors)
     Mail = Struct.new(:to, :subject, :body, :when, :tries)
 
     @@queue = Array.new
     @@mutex = Mutex.new
+    @@sent = 0
+    @@errors = 0
     @@thread = nil
 
     def self.options
@@ -34,20 +37,24 @@ module CDDAIV
     end
 
     def self.status
-      return 'Not started' unless @@thread
-
-      case @@thread.status
-      when 'sleep'
-        'Running (sleeping)'
-      when 'run'
-        'Running (executing)'
-      when 'aborting'
-        'Running (aborting)'
-      when false
-        'Exited'
+      if @@thread
+        state = case @@thread.status
+                when 'sleep'
+                  'Running (sleeping)'
+                when 'run'
+                  'Running (executing)'
+                when 'aborting'
+                  'Running (aborting)'
+                when false
+                  'Exited'
+                else
+                  'Died'
+                end
       else
-        'Died'
+        state = 'Not started'
       end
+
+      Status.new(state, @@sent, @@errors)
     end
 
     def self.run!
@@ -61,6 +68,7 @@ module CDDAIV
             begin
               Pony.mail(to: mail.to, subject: mail.subject, body: mail.body)
             rescue StandardError => e
+              @@mutex.synchronize { @@errors += 1 }
               log :error, "Mail not sent: '#{e.to_s}'"
               if mail.tries < 1
                 log :error, 'Mail will not be resend'
@@ -70,6 +78,7 @@ module CDDAIV
                 @@mutex.synchronize { @@queue.push(mail) }
               end
             else
+              @@mutex.synchronize { @@sent += 1 }
               log :info, 'Mail send successfully'
             end
           end
