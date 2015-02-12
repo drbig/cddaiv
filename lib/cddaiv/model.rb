@@ -15,7 +15,7 @@ module CDDAIV
     property :login, String, key: true, length: 3..32
     property :pass, String, required: true, length: 40
     property :salt, String, required: true, length: 6
-    property :email, String, required: true, format: :email_address, length: 6..64
+    property :email, String, required: true, format: :email_address, length: 6..254
     property :verified, Boolean, default: false, required: true
     property :since, DateTime, default: Proc.new { DateTime.now }, required: true
     property :seen, DateTime
@@ -57,7 +57,7 @@ module CDDAIV
 
     property :id, Integer, key: true
     property :num, Integer, required: true
-    property :title, String, required: true
+    property :title, String, required: true, length: 1..256
     property :open, Boolean, default: true, required: true
     property :from, DateTime, required: true
     property :until, DateTime
