@@ -54,21 +54,21 @@
               - if @user
                 - if v = @votes[n]
                   - if v.dir == :up
-                    %a.plain{:href => "/vote/up/#{i.id}/all##{i.id}", :style => 'color: green'}
+                    %a.plain{:href => "/vote/up/#{i.id}", :style => 'color: green'}
                       %span.glyphicon.glyphicon-arrow-up
                   - else
-                    %a.plain{:href => "/vote/up/#{i.id}/all##{i.id}"}
+                    %a.plain{:href => "/vote/up/#{i.id}"}
                       %span.glyphicon.glyphicon-arrow-up
                   - if v.dir == :down
-                    %a.plain{:href => "/vote/down/#{i.id}/all##{i.id}", :style => 'color: red'}
+                    %a.plain{:href => "/vote/down/#{i.id}", :style => 'color: red'}
                       %span.glyphicon.glyphicon-arrow-down
                   - else
-                    %a.plain{:href => "/vote/down/#{i.id}/all##{i.id}"}
+                    %a.plain{:href => "/vote/down/#{i.id}"}
                       %span.glyphicon.glyphicon-arrow-down
                 - else
-                  %a.plain{:href => "/vote/up/#{i.id}/all##{i.id}"}
+                  %a.plain{:href => "/vote/up/#{i.id}"}
                     %span.glyphicon.glyphicon-arrow-up
-                  %a.plain{:href => "/vote/down/#{i.id}/all##{i.id}"}
+                  %a.plain{:href => "/vote/down/#{i.id}"}
                     %span.glyphicon.glyphicon-arrow-down
               - else
                 %a.plain{:href => "#login"}

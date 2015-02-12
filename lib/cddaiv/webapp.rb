@@ -52,13 +52,19 @@ CDDA IV Mailer
 
         Mailer.send(user.email, 'CDDA IV - Account verification', body)
       end
+
+      def set_source
+        uri = request.path
+        uri += '?' + request.query_string unless request.query_string.empty?
+        session[:source] = uri
+      end
     end
 
     before do
       env['rack.logger'] = CDDAIV::Log.logger
       env['rack.errors'] = CDDAIV::Log.logger
       @user = session[:user] ? User.get(session[:user]) : nil
-      @source = params[:source]
+      @source = session[:source] || '/all'
     end
 
     get '/' do
@@ -66,24 +72,28 @@ CDDA IV Mailer
     end
 
     get '/all' do
+      set_source
       @issues = Issue.all(open: true, order: [:from.desc])
       @votes = @issues.map {|i| @user.votes(issue: i).first } if @user
       haml :all
     end
 
     get '/top' do
+      set_source
       @issues = Issue.all(open: true, limit: 30, order: [:score.desc]).to_a
       @votes = @issues.map {|i| @user.votes(issue: i).first } if @user
       haml :top
     end
 
     get '/bottom' do
+      set_source
       @issues = Issue.all(open: true, limit: 30, order: [:score.asc]).to_a
       @votes = @issues.map {|i| @user.votes(issue: i).first } if @user
       haml :bottom
     end
 
     get '/closed' do
+      set_source
       @issues = Issue.all(open: false, order: [:until.desc]).to_a
       haml :closed
     end
@@ -263,10 +273,10 @@ CDDA IV Mailer
 
     get '/logout' do
       session.delete(:user)
-      redirect '/all'
+      redirect @source
     end
 
-    get '/vote/:dir/:id/:source' do
+    get '/vote/:dir/:id' do
       unless @user
         @error = 'Not logegd in.'
         return haml :fail
@@ -287,12 +297,14 @@ CDDA IV Mailer
         return haml :fail
       end
 
+      source = "#{@source}##{issue.id}"
+
       if v = Vote.first(user: @user, issue: issue)
         v.dir == :up ? issue.score -= 1 : issue.score += 1
         v.destroy || logger.error("Couldn't delete vote for user '#{@user.login}' for issue '#{issue.id}'")
         issue.save || logger.error("Couldn't save issue '#{issue.id}'")
 
-        return redirect params[:source] if v.dir == dir
+        return redirect source if v.dir == dir
       end
 
       vote = Vote.new(user: @user, issue: issue, dir: dir)
@@ -301,7 +313,7 @@ CDDA IV Mailer
       dir == :up ? issue.score += 1 : issue.score -= 1
       issue.save || logger.error("Couldn't save issue '#{issue.id}'")
 
-      redirect @source
+      redirect source
     end
 
     get '/user/:login' do
