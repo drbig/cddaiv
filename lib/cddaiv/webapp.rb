@@ -226,7 +226,7 @@ CDDA IV Mailer
           return haml :fail
         end
 
-        email_verification(user)
+        email_verification(@user)
       end
 
       redirect "/user/#{@user.login}"
