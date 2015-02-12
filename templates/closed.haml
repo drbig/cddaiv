@@ -40,6 +40,29 @@
               %a{:href => 'https://github.com/drbig', :target => '_blank'} About
     .container
       %h3 All closed issues, by date
+      %div.btn-group{:role => 'group'}
+        - if @filter == :none
+          %a.btn.btn-default.active{:href => '?filter=none' } Everything
+        - else
+          %a.btn.btn-default{:href => '?filter=none' } Everything
+        - if @filter == :issue
+          %a.btn.btn-default.active{:href => '?filter=issue'}
+            %span.octicon.octicon-issue-closed
+            Issues only
+        - else
+          %a.btn.btn-default{:href => '?filter=issue'}
+            %span.octicon.octicon-issue-closed
+            Issues only
+        - if @filter == :pr
+          %a.btn.btn-default.active{:href => '?filter=pr'}
+            %span.octicon.octicon-git-pull-request
+            PRs only
+        - else
+          %a.btn.btn-default{:href => '?filter=pr'}
+            %span.octicon.octicon-git-pull-request
+            PRs only
+      %br
+      %br
       %table.table.table-striped
         %tr
           %th{:align => 'center'} Score

@@ -65,6 +65,12 @@ CDDA IV Mailer
       env['rack.errors'] = CDDAIV::Log.logger
       @user = session[:user] ? User.get(session[:user]) : nil
       @source = session[:source] || '/all'
+      if params[:filter]
+        filter = params[:filter].to_sym
+        @filter = [:issue, :pr].member?(filter) ? filter : :none
+      else
+        @filter = :none
+      end
     end
 
     get '/' do
@@ -73,28 +79,36 @@ CDDA IV Mailer
 
     get '/all' do
       set_source
-      @issues = Issue.all(open: true, order: [:from.desc])
+      query = {open: true, order: [:from.desc]}
+      query[:type] = @filter if @filter != :none
+      @issues = Issue.all(query)
       @votes = @issues.map {|i| @user.votes(issue: i).first } if @user
       haml :all
     end
 
     get '/top' do
       set_source
-      @issues = Issue.all(open: true, limit: 30, order: [:score.desc]).to_a
+      query = {open: true, limit: 30, order: [:score.desc]}
+      query[:type] = @filter if @filter != :none
+      @issues = Issue.all(query).to_a
       @votes = @issues.map {|i| @user.votes(issue: i).first } if @user
       haml :top
     end
 
     get '/bottom' do
       set_source
-      @issues = Issue.all(open: true, limit: 30, order: [:score.asc]).to_a
+      query = {open: true, limit: 30, order: [:score.asc]}
+      query[:type] = @filter if @filter != :none
+      @issues = Issue.all(query).to_a
       @votes = @issues.map {|i| @user.votes(issue: i).first } if @user
       haml :bottom
     end
 
     get '/closed' do
       set_source
-      @issues = Issue.all(open: false, order: [:until.desc]).to_a
+      query = {open: false, order: [:until.desc]}
+      query[:type] = @filter if @filter != :none
+      @issues = Issue.all(query).to_a
       haml :closed
     end
 
