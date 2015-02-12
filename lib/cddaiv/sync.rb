@@ -62,15 +62,15 @@ module CDDAIV
         return 0
       end
 
-      rest = closed.slice(keep, closed.length)
-      if rest.all.destroy
-        log :debug, "Removed #{rest.length} old issues"
-      else
-        log :error, 'Error removing old issues'
+      deleted = 0
+      closed.slice(keep, closed.length).each do |i|
+        i.votes.all.destroy || log(:error, "Couldn't delete votes for issue #{i.id}")
+        i.destroy ? deleted += 1 : log(:error, "Couldn't delete issue #{i.id}")
       end
+      log :debug, "Deleted #{deleted} issues"
       log :info, 'Issue cleaning finished'
 
-      rest.length
+      deleted
     end
 
     # Remove not verified users
