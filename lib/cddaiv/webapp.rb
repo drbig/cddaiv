@@ -111,7 +111,7 @@ CDDA IV Mailer
 
       user = User.new(login: params[:login], pass: params[:passa], email: params[:email])
       user.seen = DateTime.now
-      unless user.save!
+      unless user.save
         @error = user.errors.values.join(',') + '.'
         return haml :fail
       end
@@ -119,20 +119,22 @@ CDDA IV Mailer
       token = Token.new(user: user)
       # have to do it manually, 'cause dm is retarted
       token.generate
-      unless token.save!
+      unless token.save
         @error = 'Failed to save the activation token.'
-        @error += '<br>Failed to destroy the user.' unless user.destroy!
+        @error += '<br>Failed to destroy the user.' unless user.destroy
         return haml :fail
       end
 
       user.token = token
-      unless user.save!
+      unless user.save
         @error = 'Failed to save the user with token.'
-        @error += '<br>Failed to destroy the user.' unless user.destroy!
+        @error += '<br>Failed to destroy the user.' unless user.destroy
         return haml :fail
       end
 
       email_verification(user)
+
+      logger.info "New user '#{user.login}' registered"
 
       session[:user] = params[:login]
       redirect @source
@@ -168,25 +170,25 @@ CDDA IV Mailer
         @user.verified = false
       end
 
-      unless @user.save!
+      unless @user.save
         @error = @user.errors.values.join(',') + '.'
         return haml :fail
       end
 
       if params[:email]
-        @user.token.destroy! if @user.token
+        @user.token.destroy if @user.token
 
         token = Token.new(user: @user)
         # have to do it manually, 'cause dm is retarted
         token.generate
 
-        unless token.save!
+        unless token.save
           @error = 'Failed to save the activation token.'
           return haml :fail
         end
 
         @user.token = token
-        unless @user.save!
+        unless @user.save
           @error = 'Failed to save the user with token.'
           return haml :fail
         end
@@ -219,12 +221,14 @@ CDDA IV Mailer
         return haml :fail
       end
 
-      user.token.destroy!
+      user.token.destroy || logger.error("Couldn't destroy token for '#{user.login}'")
       user.verified = true
-      unless user.save!
+      unless user.save
         @error = user.errors.values.join(',') + '.'
         return haml :fail
       end
+
+      logger.info "User '#{user.login}' verified"
 
       redirect "/user/#{user.login}"
     end
@@ -251,7 +255,7 @@ CDDA IV Mailer
       end
 
       user.seen = DateTime.now
-      user.save!
+      user.save
 
       session[:user] = params[:login]
       redirect @source
@@ -285,17 +289,17 @@ CDDA IV Mailer
 
       if v = Vote.first(user: @user, issue: issue)
         v.dir == :up ? issue.score -= 1 : issue.score += 1
-        v.destroy!
-        issue.save!
+        v.destroy || logger.error("Couldn't delete vote for user '#{@user.login}' for issue '#{issue.id}'")
+        issue.save || logger.error("Couldn't save issue '#{issue.id}'")
 
         return redirect params[:source] if v.dir == dir
       end
 
       vote = Vote.new(user: @user, issue: issue, dir: dir)
-      vote.save!
+      vote.save || logger.error("Couldn't save vote for user '#{@user.login}' for issue '#{issue.id}'")
 
       dir == :up ? issue.score += 1 : issue.score -= 1
-      issue.save!
+      issue.save || logger.error("Couldn't save issue '#{issue.id}'")
 
       redirect @source
     end
