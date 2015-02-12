@@ -14,6 +14,7 @@ module CDDAIV
 
     @@queue = Array.new
     @@mutex = Mutex.new
+    @@thread = nil
 
     def self.options
       Pony.options
@@ -32,9 +33,26 @@ module CDDAIV
       end
     end
 
+    def self.status
+      return 'Not started' unless @@thread
+
+      case @@thread.status
+      when 'sleep'
+        'Running (sleeping)'
+      when 'run'
+        'Running (executing)'
+      when 'aborting'
+        'Running (aborting)'
+      when false
+        'Exited'
+      else
+        'Died'
+      end
+    end
+
     def self.run!
       log :info, 'Starting mailer thread'
-      Thread.new do
+      @@thread = Thread.new do
         while true
           if mail = @@mutex.synchronize { @@queue.shift }
             log :info, "Sending email to '#{mail.to}'"
@@ -42,7 +60,7 @@ module CDDAIV
             log :debug, "Body legth: #{mail.body.length}"
             begin
               Pony.mail(to: mail.to, subject: mail.subject, body: mail.body)
-            rescue Exception => e
+            rescue StandardError => e
               log :error, "Mail not sent: '#{e.to_s}'"
               if mail.tries < 1
                 log :error, 'Mail will not be resend'
@@ -58,6 +76,9 @@ module CDDAIV
           sleep(10)
         end
       end
+      @@thread.abort_on_exception = true
+
+      @@thread
     end
   end
 end
