@@ -21,7 +21,6 @@ module CDDAIV
   class WebApp < Sinatra::Base
     configure do
       enable :static
-      enable :sessions
       enable :logging
       enable :dump_errors
       enable :raise_errors
@@ -29,6 +28,7 @@ module CDDAIV
       set :root, File.join(File.dirname(__FILE__), '..', '..')
       set :public_dir, File.join(settings.root, 'static')
       set :views, File.join(settings.root, 'templates')
+      set :sessions, expire_after: 2592000
       set :session_secret, 'whatever for now'
       set :haml, ugly: true
     end
