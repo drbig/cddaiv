@@ -1,0 +1,108 @@
+#!/usr/bin/env ruby
+# coding: utf-8
+#
+
+$LOAD_PATH.unshift File.join(File.dirname(__FILE__), '../lib')
+
+require 'thor'
+
+# for timely output
+STDOUT.sync = true
+STDERR.sync = true
+
+class CLI < Thor
+  class_option :config, type: :string, default: '../default.yaml', desc: 'Load config from a YAML file'
+  class_option :db, type: :string, desc: 'Database URI'
+  class_option :verbose, type: :boolean, default: false, desc: 'Enable debug logging'
+  class_option :log, type: :string, desc: 'Log to file'
+
+  no_commands do
+    def setup
+      require 'yaml'
+
+      cfg = {database: {}, mailer: {}, scheduler: {}, webapp: {}}
+
+      if options[:config]
+        begin
+          cfg = File.open(options[:config]) {|f| YAML.load(f.read) }
+        rescue StandardError => e
+          STDERR.puts 'Error loading config file'
+          STDERR.puts e.to_s
+          exit(1)
+        end
+      end
+
+      require 'cddaiv/log'
+      CDDAIV::Log.default!(options)
+
+      # this ain't pretty
+      cfg[:database][:uri] = options[:db] if options[:db]
+      cfg[:webapp][:host]  = options[:host] if options[:host]
+      cfg[:webapp][:port]  = options[:port] if options[:port]
+      cfg[:webapp][:bind]  = cfg[:webapp][:host]
+      cfg
+    end
+  end
+
+  desc 'seed', 'Migrate and seed the database'
+  method_option :user, type: :boolean, default: false, desc: 'Add test user'
+  def seed
+    cfg = setup
+
+    require 'cddaiv/sync'
+    CDDAIV::Database.setup!(cfg[:database][:uri], migrate: true)
+    CDDAIV::User.new(login: 'test', pass: 'password', email: 'test@localhost', verified: true).save! if options[:user]
+    CDDAIV::Database.update!
+  end
+
+  desc 'update', 'Update the issues database'
+  method_option :since, type: :string, desc: 'Update since the given date'
+  def update
+    cfg = setup
+
+    require 'chronic'
+    cfg[:since] = Chronic.parse(cfg[:since]) if cfg[:since]
+
+    require 'cddaiv/sync'
+    CDDAIV::Database.setup!(cfg[:database][:uri])
+    CDDAIV::Database.update!(cfg)
+  end
+
+  desc 'console', 'Run Pry console with database set up'
+  def console
+    cfg = setup
+
+    require 'cddaiv/model'
+    require 'pry'
+    CDDAIV::Database.setup!(cfg[:database][:uri])
+    Pry.binding_for(CDDAIV).pry
+  end
+
+  desc 'start', 'Run the whole thing'
+  method_option :host, type: :string, desc: 'Bind hostname or IP address'
+  method_option :port, type: :numeric, desc: 'Port to listen on'
+  def start
+    cfg = setup
+
+    require 'cddaiv/model'
+    CDDAIV::Database.setup!(cfg[:database][:uri])
+
+    require 'cddaiv/mailer'
+    CDDAIV::Mailer.options = cfg[:mailer]
+    CDDAIV::Mailer.run!
+
+    require 'cddaiv/scheduler'
+    CDDAIV::Scheduler.run!(cfg[:scheduler])
+
+    require 'cddaiv/webapp'
+    CDDAIV::WebApp.run!(cfg[:webapp])
+  end
+
+  desc 'version', 'Show version and exit'
+  def version
+    require 'cddaiv/version'
+    puts "CDDA IV #{CDDAIV::VERSION} - https://github.com/drbig/cddaiv"
+  end
+end
+
+CLI.start(ARGV)

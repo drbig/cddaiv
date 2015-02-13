@@ -1,0 +1,16 @@
+---
+:database:
+  :uri: sqlite:///tmp/cddaiv.bin
+:webapp:
+  :host: 127.0.0.1
+  :port: 8111
+:mailer:
+  :from: some@mail.com
+  :via: :smtp
+  :via_options:
+    :address: smtp.mail.com
+:scheduler:
+  :update: 1h
+  :clean_issues: 1w
+  :clean_nv_users: 1d
+  :clean_ia_users: 1d
