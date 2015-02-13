@@ -19,6 +19,12 @@ end
 
 module CDDAIV
   class WebApp < Sinatra::Base
+    @@secret = 'this is not secure'
+
+    def self.secret=(str)
+      @@secret = str
+    end
+
     configure do
       enable :static
       enable :logging
@@ -29,7 +35,7 @@ module CDDAIV
       set :public_dir, File.join(settings.root, 'static')
       set :views, File.join(settings.root, 'templates')
       set :sessions, expire_after: 2592000
-      set :session_secret, 'whatever for now'
+      set :session_secret, @@secret
       set :haml, ugly: true
     end
 

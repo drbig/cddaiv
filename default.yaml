@@ -8,6 +8,7 @@
 :webapp:
   :host: 127.0.0.1
   :port: 8111
+  :secret: something secure here, please
 :mailer:
   :from: some@mail.com
   :via: :smtp

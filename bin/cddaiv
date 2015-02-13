@@ -102,6 +102,7 @@ class CLI < Thor
     CDDAIV::Scheduler.run!(cfg[:scheduler])
 
     require 'cddaiv/webapp'
+    CDDAIV::WebApp.secret = cfg[:webapp][:secret] if cfg[:webapp][:secret]
     CDDAIV::WebApp.run!(cfg[:webapp])
   end
 
