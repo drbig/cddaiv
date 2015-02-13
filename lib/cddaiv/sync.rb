@@ -18,6 +18,8 @@ module CDDAIV
     # Sync issue list with GitHub
     def self.update!(opts = {})
       since = opts[:since] || @@last_update
+      maxdelta = opts[:maxdelta] || '1 day ago'
+      stamp = Chronic.parse(maxdelta).to_datetime
       start = Time.now
 
       log :info, 'Updating issues database...'
@@ -35,10 +37,23 @@ module CDDAIV
       Github.get_issues(since, :closed).each do |ri|
         if i = Issue.get(ri.id)
           closed += 1 unless ri.open
-          i.update(ri.to_h) ? updated += 1 : log(:error, "Couldn't update issue #{i.id}")
+          state = ri.to_h
+          state[:stale] = false
+          i.update(state) ? updated += 1 : log(:error, "Couldn't update issue #{i.id}")
         end
       end
       log :debug, "New: #{created}, updated: #{updated}, closed: #{closed} issues"
+
+      stale_yes = 0
+      stale_not = 0
+      Issue.all(open: true).each do |i|
+        if i.updated < stamp
+          i.update(stale: true) ? stale_yes += 1 : log(:error, "Couldn't update issue #{i.id}")
+        else
+          i.update(stale: false) ? stale_not += 1 : log(:error, "Couldn't update issue #{i.id}")
+        end
+      end
+      log :debug, "Stale issues: +#{stale_yes} -#{stale_not}"
       log :info, 'Database update finished'
 
       @@last_update = start

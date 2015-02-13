@@ -1,0 +1,48 @@
+%table.table.table-striped
+  %tr
+    %th Score
+    %th Vote
+    %th Title
+    %th
+      %span.glyphicon.glyphicon-info-sign
+    %th Opened
+  - @issues.each_with_index do |i, n|
+    %tr
+      %td{:align => 'center'}= i.score
+      %td{:align => 'center'}
+        - if @user
+          - if v = @votes[n]
+            - if v.dir == :up
+              %a.plain{:href => "/vote/up/#{i.id}", :style => 'color: green'}
+                %span.glyphicon.glyphicon-arrow-up
+            - else
+              %a.plain{:href => "/vote/up/#{i.id}"}
+                %span.glyphicon.glyphicon-arrow-up
+            - if v.dir == :down
+              %a.plain{:href => "/vote/down/#{i.id}", :style => 'color: red'}
+                %span.glyphicon.glyphicon-arrow-down
+            - else
+              %a.plain{:href => "/vote/down/#{i.id}"}
+                %span.glyphicon.glyphicon-arrow-down
+          - else
+            %a.plain{:href => "/vote/up/#{i.id}"}
+              %span.glyphicon.glyphicon-arrow-up
+            %a.plain{:href => "/vote/down/#{i.id}"}
+              %span.glyphicon.glyphicon-arrow-down
+        - else
+          %a.plain{:href => "#logreg"}
+            %span.glyphicon.glyphicon-ban-circle
+      %td
+        %a.plain{:href => "/issue/#{i.id}"}
+          %span.glyphicon.glyphicon-search
+        &nbsp;
+        %a.plain{:href => "https://github.com/CleverRaven/Cataclysm-DDA/issues/#{i.num}", :target => '_blank'}= i.title
+        %a.anchor{:name => "#{i.id}"} &nbsp;
+      %td
+        - if i.type == :pr
+          %span.octicon.octicon-git-pull-request
+        - else
+          %span.octicon.octicon-issue-opened
+        - if i.stale
+          %span.octicon.octicon-alert
+      %td= i.from.strftime('%Y-%m-%d %H:%M')

@@ -65,7 +65,11 @@
           %td= @issue.from.strftime('%Y-%m-%d %H:%M:%S %Z')
         %tr
           %th Updated
-          %td= @issue.updated.strftime('%Y-%m-%d %H:%M:%S %Z')
+          %td
+            - if @issue.stale
+              %span.octicon.octicon-alert
+              &nbsp;
+            = @issue.updated.strftime('%Y-%m-%d %H:%M:%S %Z')
         - unless @issue.open
           %tr
             %th Closed

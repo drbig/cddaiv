@@ -84,13 +84,22 @@ CDDA IV Mailer
     before do
       env['rack.logger'] = CDDAIV::Log.logger
       env['rack.errors'] = CDDAIV::Log.logger
+
       @user = session[:user] ? User.get(session[:user]) : nil
       @source = session[:source] || '/all'
-      if params[:filter]
-        filter = params[:filter].to_sym
-        @filter = [:issue, :pr].member?(filter) ? filter : :none
-      else
-        @filter = :none
+
+      @filter_type = :none
+      @filter = Hash.new
+      case params[:filter]
+      when 'issue'
+        @filter_type = :issue
+        @filter[:type] = :issue
+      when 'pr'
+        @filter_type = :pr
+        @filter[:type] = :pr
+      when 'stale'
+        @filter_type = :stale
+        @filter[:stale] = true
       end
     end
 
@@ -100,8 +109,7 @@ CDDA IV Mailer
 
     get '/all' do
       set_source
-      query = {open: true, order: [:from.desc]}
-      query[:type] = @filter if @filter != :none
+      query = {open: true, order: [:from.desc]}.merge(@filter)
       @issues = Issue.all(query)
       @votes = @issues.map {|i| @user.votes(issue: i).first } if @user
       haml :all
@@ -109,8 +117,7 @@ CDDA IV Mailer
 
     get '/top' do
       set_source
-      query = {open: true, limit: 30, order: [:score.desc]}
-      query[:type] = @filter if @filter != :none
+      query = {open: true, limit: 30, order: [:score.desc]}.merge(@filter)
       @issues = Issue.all(query).to_a
       @votes = @issues.map {|i| @user.votes(issue: i).first } if @user
       haml :top
@@ -118,8 +125,7 @@ CDDA IV Mailer
 
     get '/bottom' do
       set_source
-      query = {open: true, limit: 30, order: [:score.asc]}
-      query[:type] = @filter if @filter != :none
+      query = {open: true, limit: 30, order: [:score.asc]}.merge(@filter)
       @issues = Issue.all(query).to_a
       @votes = @issues.map {|i| @user.votes(issue: i).first } if @user
       haml :bottom
@@ -127,8 +133,7 @@ CDDA IV Mailer
 
     get '/closed' do
       set_source
-      query = {open: false, order: [:until.desc]}
-      query[:type] = @filter if @filter != :none
+      query = {open: false, order: [:until.desc]}.merge(@filter)
       @issues = Issue.all(query).to_a
       haml :closed
     end

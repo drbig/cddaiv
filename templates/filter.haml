@@ -1,9 +1,9 @@
 %div.btn-group{:role => 'group'}
-  - if @filter == :none
+  - if @filter_type == :none
     %a.btn.btn-default.active{:href => '?filter=none' } Everything
   - else
     %a.btn.btn-default{:href => '?filter=none' } Everything
-  - if @filter == :issue
+  - if @filter_type == :issue
     %a.btn.btn-default.active{:href => '?filter=issue'}
       %span.octicon.octicon-issue-opened
       Issues only
@@ -11,7 +11,7 @@
     %a.btn.btn-default{:href => '?filter=issue'}
       %span.octicon.octicon-issue-opened
       Issues only
-  - if @filter == :pr
+  - if @filter_type == :pr
     %a.btn.btn-default.active{:href => '?filter=pr'}
       %span.octicon.octicon-git-pull-request
       PRs only
@@ -19,5 +19,14 @@
     %a.btn.btn-default{:href => '?filter=pr'}
       %span.octicon.octicon-git-pull-request
       PRs only
+  - if stale
+    - if @filter_type == :stale
+      %a.btn.btn-default.active{:href => '?filter=stale'}
+        %span.octicon.octicon-alert
+        Stale only
+    - else
+      %a.btn.btn-default{:href => '?filter=stale'}
+        %span.octicon.octicon-alert
+        Stale only
 %br
 %br

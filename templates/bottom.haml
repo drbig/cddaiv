@@ -46,52 +46,8 @@
         %a{:href => '#logreg'}
           %h4 You're not logged in. That means no voting for you.
       %h3 Bottom 30 issues, by score
-      = haml :filter, layout: false
-      %table.table.table-striped
-        %tr
-          %th{:align => 'center'} Score
-          %th{:align => 'center'} Vote
-          %th Title
-          %th
-            %span.glyphicon.glyphicon-info-sign
-          %th Opened
-        - @issues.each_with_index do |i, n|
-          %tr
-            %td{:align => 'center'}= i.score
-            %td{:align => 'center'}
-              - if @user
-                - if v = @votes[n]
-                  - if v.dir == :up
-                    %a.plain{:href => "/vote/up/#{i.id}", :style => 'color: green'}
-                      %span.glyphicon.glyphicon-arrow-up
-                  - else
-                    %a.plain{:href => "/vote/up/#{i.id}"}
-                      %span.glyphicon.glyphicon-arrow-up
-                  - if v.dir == :down
-                    %a.plain{:href => "/vote/down/#{i.id}", :style => 'color: red'}
-                      %span.glyphicon.glyphicon-arrow-down
-                  - else
-                    %a.plain{:href => "/vote/down/#{i.id}"}
-                      %span.glyphicon.glyphicon-arrow-down
-                - else
-                  %a.plain{:href => "/vote/up/#{i.id}"}
-                    %span.glyphicon.glyphicon-arrow-up
-                  %a.plain{:href => "/vote/down/#{i.id}"}
-                    %span.glyphicon.glyphicon-arrow-down
-              - else
-                %a.plain{:href => "#login"}
-                  %span.glyphicon.glyphicon-ban-circle
-            %td
-              %a.plain{:href => "https://github.com/CleverRaven/Cataclysm-DDA/issues/#{i.num}", :target => '_blank'}= i.title
-              %a.anchor{:name => "#{i.id}"} &nbsp;
-            %td
-              %a.plain{:href => "/issue/#{i.id}"}
-                %span.glyphicon.glyphicon-search
-              - if i.type == :pr
-                %span.octicon.octicon-git-pull-request
-              - else
-                %span.octicon.octicon-issue-opened
-            %td= i.from.strftime('%Y-%m-%d %H:%M')
+      = haml :filter, layout: false, locals: {stale: true}
+      = haml :issues_open, layout: false
     - unless @user
       = haml :logreg, layout: false
     .container

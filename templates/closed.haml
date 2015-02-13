@@ -46,7 +46,7 @@
         %a{:href => '#logreg'}
           %h4 You're not logged in. That means no voting for you.
       %h3 All closed issues, by date
-      = haml :filter, layout: false
+      = haml :filter, layout: false, locals: {stale: false}
       %table.table.table-striped
         %tr
           %th{:align => 'center'} Score
