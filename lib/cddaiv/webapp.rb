@@ -184,7 +184,7 @@ CDDA IV Mailer
       end
 
       token = Token.new(user: user)
-      # have to do it manually, 'cause dm is retarted
+      # TODO: i think this can be automated
       token.generate
       unless token.save
         @error = 'Failed to save the activation token.'
@@ -246,7 +246,7 @@ CDDA IV Mailer
         @user.token.destroy if @user.token
 
         token = Token.new(user: @user)
-        # have to do it manually, 'cause dm is retarted
+        # TODO: i think this can be automated
         token.generate
 
         unless token.save
