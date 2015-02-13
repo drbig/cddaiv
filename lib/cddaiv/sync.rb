@@ -21,30 +21,24 @@ module CDDAIV
       start = Time.now
 
       log :info, 'Updating issues database...'
-      opened = 0
+      created = 0
       updated = 0
       Github.get_issues(since, :open).each do |ri|
         if i = Issue.get(ri.id)
-          if (i.title != ri.title) || (i.updated != ri.updated)
-            i.update(title: ri.title, updated: ri.updated) ? updated += 1 : log(:error, "Couldn't update issue #{i.id}")
-          end
+          i.update(ri.to_h) ? updated += 1 : log(:error, "Couldn't update issue #{i.id}")
         else
           i = Issue.new(ri.to_h)
-          i.save ? opened += 1 : log(:error, "Couldn't save issue #{i.id}")
+          i.save ? created += 1 : log(:error, "Couldn't save issue #{i.id}")
         end
       end
       closed = 0
       Github.get_issues(since, :closed).each do |ri|
         if i = Issue.get(ri.id)
-          if (i.title != ri.title) || (i.updated != ri.updated) || (i.until != ri.until)
-            i.update(title: ri.title, updated: ri.updated, until: ri.until) ? updated += 1 : log(:error, "Couldn't update issue #{i.id}")
-          end
-          if i.open
-            i.update(open: false, until: ri.until) ? closed += 1 : log(:error, "Couldn't update issue #{i.id}")
-          end
+          closed += 1 unless ri.open
+          i.update(ri.to_h) ? updated += 1 : log(:error, "Couldn't update issue #{i.id}")
         end
       end
-      log :debug, "New: #{opened}, updated: #{updated}, closed: #{closed} issues"
+      log :debug, "New: #{created}, updated: #{updated}, closed: #{closed} issues"
       log :info, 'Database update finished'
 
       @@last_update = start
