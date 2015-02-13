@@ -10,15 +10,25 @@ require 'cddaiv/model'
 module CDDAIV
   module Database
     @@last_update = nil
+    @@options = {
+      keep: 100,
+      stale: '1 week ago',
+      verified: '2 days ago',
+      active: '6 months ago',
+    }
 
-    def self.last_update
-      @@last_update
+    def self.options
+      @@options
+    end
+
+    def self.options=(hsh)
+      @@options.merge!(hsh)
     end
 
     # Sync issue list with GitHub
-    def self.update!(opts = {})
-      since = opts[:since] || @@last_update
-      maxdelta = opts[:maxdelta] || '1 day ago'
+    def self.update!(since = nil)
+      since ||= @@last_update
+      maxdelta = @@options[:stale] || '1 week ago'
       stamp = Chronic.parse(maxdelta).to_datetime
       start = Time.now
 
@@ -60,8 +70,8 @@ module CDDAIV
     end
 
     # Remove closed issues
-    def self.clean_issues!(opts = {})
-      keep = opts[:keep] || 100
+    def self.clean_issues!
+      keep = @@options[:keep] || 100
 
       log :info, 'Cleaning closed issues...'
       closed = Issue.all(open: false, order: [:until.desc])
@@ -83,9 +93,9 @@ module CDDAIV
     end
 
     # Remove not verified users
-    def self.clean_nv_users!(opts = {})
-      maxdelta = opts[:maxdelta] || '2 days ago'
-      stamp = Chronic.parse(maxdelta)
+    def self.clean_nv_users!
+      maxdelta = @@options[:verified] || '2 days ago'
+      stamp = Chronic.parse(maxdelta).to_datetime
 
       log :info, 'Cleaning not verified users...'
       removed = 0
@@ -114,9 +124,9 @@ module CDDAIV
     end
 
     # Remove inactive users
-    def self.clean_ia_users(opts = {})
-      maxdelta = opts[:maxdelta] || '1 year ago'
-      stamp = Chronic.parse(maxdelta)
+    def self.clean_ia_users!
+      maxdelta = @@options[:active] || '6 months ago'
+      stamp = Chronic.parse(maxdelta).to_datetime
 
       log :info, 'Cleaning inactive users...'
       removed = 0

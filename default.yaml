@@ -1,6 +1,10 @@
 ---
 :database:
   :uri: sqlite:///tmp/cddaiv.bin
+  :keep: 100
+  :stale: 1 week ago
+  :verified: 2 days ago
+  :active: 6 months ago
 :webapp:
   :host: 127.0.0.1
   :port: 8111

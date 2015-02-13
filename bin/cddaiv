@@ -52,6 +52,7 @@ class CLI < Thor
     require 'cddaiv/sync'
     CDDAIV::Database.setup!(cfg[:database][:uri], migrate: true)
     CDDAIV::User.new(login: 'test', pass: 'password', email: 'test@localhost', verified: true).save! if options[:user]
+    CDDAIV::Database.options = cfg[:database]
     CDDAIV::Database.update!
   end
 
@@ -60,21 +61,26 @@ class CLI < Thor
   def update
     cfg = setup
 
-    require 'chronic'
-    cfg[:since] = Chronic.parse(cfg[:since]) if cfg[:since]
+    since = nil
+    if options[:since]
+      require 'chronic'
+      since = Chronic.parse(cfg[:since])
+    end
 
     require 'cddaiv/sync'
     CDDAIV::Database.setup!(cfg[:database][:uri])
-    CDDAIV::Database.update!(cfg)
+    CDDAIV::Database.options = cfg[:database]
+    CDDAIV::Database.update!(since)
   end
 
   desc 'console', 'Run Pry console with database set up'
   def console
     cfg = setup
 
-    require 'cddaiv/model'
+    require 'cddaiv/sync'
     require 'pry'
     CDDAIV::Database.setup!(cfg[:database][:uri])
+    CDDAIV::Database.options = cfg[:database]
     Pry.binding_for(CDDAIV).pry
   end
 
@@ -84,8 +90,9 @@ class CLI < Thor
   def start
     cfg = setup
 
-    require 'cddaiv/model'
+    require 'cddaiv/sync'
     CDDAIV::Database.setup!(cfg[:database][:uri])
+    CDDAIV::Database.options = cfg[:database]
 
     require 'cddaiv/mailer'
     CDDAIV::Mailer.options = cfg[:mailer]
