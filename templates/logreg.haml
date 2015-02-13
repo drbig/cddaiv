@@ -2,28 +2,14 @@
   %a{:name => 'logreg'}
   %div.row
     %div.col-md-4
-      %div.panel.panel-default
-        %div.panel-heading Information
-        %div.panel-body
-          You need a working e-mail address.
-          %br
-          You will receive a verification e-mail with a link to click.
-          %br
-          Unverified accounts are deleted within two days.
-          %br
-          Your e-mail will be shown only to you.
-          %br
-          Your e-mail is used only for verification and for password reset.
-          %br
-          You will be able to update your e-mail or password at any time.
-          %br
-          Your browser should keep you logged in for about a month.
-          %br
-          Login is case-sensitive.
-          %br
-          This requires cookies.
-          %br
-          Passwords are stored in a sensible manner.
+      .well.well-sm.small
+        %ul.list-unstyled
+          %li Login is case-sensitive, has to be pure-ASCII alphanumeric, minimum 3 characters long.
+          %li Password has to be minimum 6 characters, and is unfiltered.
+          %li You need a working e-mail address. You will receive a verification e-mail with a link to click. Unverified accounts are deleted within two days.
+          %li Your e-mail will be shown only to you, and used only for verification and password reset.
+          %li You will be able to update your e-mail or password at any time.
+          %li This requires cookies. Passwords are stored in a sensible manner.
     %div.col-md-4
       %div.panel.panel-default
         %div.panel-heading Login here

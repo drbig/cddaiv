@@ -151,6 +151,11 @@ CDDA IV Mailer
         return haml :fail
       end
 
+      if params[:login] != params[:login].gsub(/[^[A-za-z0-9]]/, '')
+        @error = 'Login has to be plain-ASCII alphanumeric.'
+        return haml :fail
+      end
+
       if User.get(params[:login])
         @error = "Sorry, login '#{params[:login]}' is already taken."
         return haml :fail
