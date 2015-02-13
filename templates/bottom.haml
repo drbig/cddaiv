@@ -9,7 +9,7 @@
     %link{:href => "/css/bootstrap-theme.min.css", :rel => "stylesheet"}/
     %link{:href => "/css/octicons.css", :rel => "stylesheet"}/
     %link{:href => "/css/main.css", :rel => "stylesheet"}/
-    %script{:src => "/js/bootstrap.js"}
+    %script{:src => "/js/bootstrap.min.js"}
   %body
     .navbar.navbar-inverse.navbar-fixed-top{:role => "navigation"}
       .container
@@ -41,30 +41,11 @@
             %li
               %a{:href => 'https://github.com/drbig', :target => '_blank'} About
     .container
+      - unless @user
+        %a{:href => '#logreg'}
+          %h4 You're not logged in. That means no voting for you.
       %h3 Bottom 30 issues, by score
-      %div.btn-group{:role => 'group'}
-        - if @filter == :none
-          %a.btn.btn-default.active{:href => '?filter=none' } Everything
-        - else
-          %a.btn.btn-default{:href => '?filter=none' } Everything
-        - if @filter == :issue
-          %a.btn.btn-default.active{:href => '?filter=issue'}
-            %span.octicon.octicon-issue-opened
-            Issues only
-        - else
-          %a.btn.btn-default{:href => '?filter=issue'}
-            %span.octicon.octicon-issue-opened
-            Issues only
-        - if @filter == :pr
-          %a.btn.btn-default.active{:href => '?filter=pr'}
-            %span.octicon.octicon-git-pull-request
-            PRs only
-        - else
-          %a.btn.btn-default{:href => '?filter=pr'}
-            %span.octicon.octicon-git-pull-request
-            PRs only
-      %br
-      %br
+      = haml :filter, layout: false
       %table.table.table-striped
         %tr
           %th{:align => 'center'} Score
@@ -111,36 +92,7 @@
                 %span.octicon.octicon-issue-opened
             %td= i.from.strftime('%Y-%m-%d %H:%M')
     - unless @user
-      .container
-        %a{:name => 'login'}
-        %h4 You're not logged in. That means no voting for you.
-        %div.row
-          %div.col-md-6
-            %div.panel.panel-default
-              %div.panel-heading Login here
-              %div.panel-body
-                %form{:role => "form", :action => "/login", :method => "post"}
-                  .form-group
-                    %input.form-control{:name => "login", :type => "text", :placeholder => "Login"}
-                  .form-group
-                    %input.form-control{:name => "pass", :type => "password", :placeholder => "Password"}
-                  %input{:name => "source", :type => "hidden", :value => "/bottom"}
-                  %button.btn.btn-success{:type => "submit"} Login
-          %div.col-md-6
-            %div.panel.panel-default
-              %div.panel-heading Or register here
-              %div.panel-body
-                %form{:role => "form", :action => "/register", :method => "post"}
-                  .form-group
-                    %input.form-control{:name => "login", :type => "text", :placeholder => "Login"}
-                  .form-group
-                    %input.form-control{:name => "passa", :type => "password", :placeholder => "Password"}
-                  .form-group
-                    %input.form-control{:name => "passb", :type => "password", :placeholder => "Password again"}
-                  .form-group
-                    %input.form-control{:name => "email", :type => "email", :placeholder => "E-Mail"}
-                  %input{:name => "source", :type => "hidden", :value => "/bottom"}
-                  %button.btn.btn-success{:type => "submit"} Register
+      = haml :logreg, layout: false
     .container
       .footer
         &copy; Copyright 2015 Piotr S. Staszewski

@@ -1,0 +1,52 @@
+.container
+  %a{:name => 'logreg'}
+  %div.row
+    %div.col-md-4
+      %div.panel.panel-default
+        %div.panel-heading Information
+        %div.panel-body
+          You need a working e-mail address.
+          %br
+          You will receive a verification e-mail with a link to click.
+          %br
+          Unverified accounts are deleted within two days.
+          %br
+          Your e-mail will be shown only to you.
+          %br
+          Your e-mail is used only for verification and for password reset.
+          %br
+          You will be able to update your e-mail or password at any time.
+          %br
+          Your browser should keep you logged in for about a month.
+          %br
+          Login is case-sensitive.
+          %br
+          This requires cookies.
+          %br
+          Passwords are stored in a sensible manner.
+    %div.col-md-4
+      %div.panel.panel-default
+        %div.panel-heading Login here
+        %div.panel-body
+          %form{:role => "form", :action => "/login", :method => "post"}
+            .form-group
+              %input.form-control{:name => "login", :type => "text", :placeholder => "Login"}
+            .form-group
+              %input.form-control{:name => "pass", :type => "password", :placeholder => "Password"}
+            %input{:name => "source", :type => "hidden", :value => "/all"}
+            %button.btn.btn-success{:type => "submit"} Login
+    %div.col-md-4
+      %div.panel.panel-default
+        %div.panel-heading Or register here
+        %div.panel-body
+          %form{:role => "form", :action => "/register", :method => "post"}
+            .form-group
+              %input.form-control{:name => "login", :type => "text", :placeholder => "Login"}
+            .form-group
+              %input.form-control{:name => "passa", :type => "password", :placeholder => "Password"}
+            .form-group
+              %input.form-control{:name => "passb", :type => "password", :placeholder => "Password again"}
+            .form-group
+              %input.form-control{:name => "email", :type => "email", :placeholder => "E-Mail"}
+            %input{:name => "source", :type => "hidden", :value => "/all"}
+            %button.btn.btn-success{:type => "submit"} Register
