@@ -33,8 +33,9 @@
               %input.form-control{:name => "login", :type => "text", :placeholder => "Login"}
             .form-group
               %input.form-control{:name => "pass", :type => "password", :placeholder => "Password"}
-            %input{:name => "source", :type => "hidden", :value => "/all"}
-            %button.btn.btn-success{:type => "submit"} Login
+            .form-group
+              %button.btn.btn-success{:type => "submit"} Login
+              %a{:href => '/reset'} Forgot password?
     %div.col-md-4
       %div.panel.panel-default
         %div.panel-heading Or register here
@@ -48,5 +49,4 @@
               %input.form-control{:name => "passb", :type => "password", :placeholder => "Password again"}
             .form-group
               %input.form-control{:name => "email", :type => "email", :placeholder => "E-Mail"}
-            %input{:name => "source", :type => "hidden", :value => "/all"}
             %button.btn.btn-success{:type => "submit"} Register

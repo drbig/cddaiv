@@ -55,6 +55,25 @@ CDDA IV Mailer
         Mailer.send(user.email, 'CDDA IV - Account verification', body)
       end
 
+      def email_reset(user, password)
+        body = <<-eob
+Hello #{user.login}!
+
+You've requested a password reset. Here's your new password:
+
+#{password}
+
+Please login at http://#{request.host_with_port}/all and go to your
+user tab and change the password to something more permanent,
+preferably as soon as possible.
+
+Best regards,
+CDDA IV Mailer
+        eob
+
+        Mailer.send(user.email, 'CDDA IV - Password reset', body)
+      end
+
       def set_source
         uri = request.path
         uri += '?' + request.query_string unless request.query_string.empty?
@@ -134,6 +153,11 @@ CDDA IV Mailer
 
       if User.get(params[:login])
         @error = "Sorry, login '#{params[:login]}' is already taken."
+        return haml :fail
+      end
+
+      if User.first(email: params[:email], verified: true)
+        @error = 'Sorry, the e-mail you gave has already been used.'
         return haml :fail
       end
 
@@ -232,6 +256,39 @@ CDDA IV Mailer
       redirect "/user/#{@user.login}"
     end
 
+    get '/reset' do
+      @done = nil
+      @error = nil
+      haml :reset
+    end
+
+    post '/reset' do
+      @done = nil
+
+      unless params[:email]
+        @error = 'You need to specify your email.'
+        return haml :reset
+      end
+
+      unless user = User.first(email: params[:email], verified: true)
+        @error = 'No verified account with the address you have specified.<br>Maybe just register.'
+        return haml :reset
+      end
+
+      password = ('A'..'Z').to_a.sample(12).join
+      unless user.update(pass: password)
+        logger.error "Couldn't set password for '#{user.login}'"
+        @error = 'Sorry, something went wrong.<br>If this happens more than once contact the admin.'
+        return haml :reset
+      end
+
+      email_reset(user, password)
+
+      @done = 'You should receive an email with the new password soon.'
+      @error = nil
+      haml :reset
+    end
+
     get '/verify/:login/:token' do
       unless user = User.get(params[:login])
         @error = 'No such user.'
@@ -278,7 +335,7 @@ CDDA IV Mailer
       end
 
       unless user = User.get(params[:login])
-        @error = 'Access denied.'
+        @error = 'No such user.<br>Remember login is case-sensitive.'
         return haml :fail
       end
 
