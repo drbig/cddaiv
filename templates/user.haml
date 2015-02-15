@@ -39,8 +39,6 @@
               - else
                 %li
                   %a{:href => "/user/#{@user.login}"}= @user.login
-              %li
-                %a{:href => '/logout'} Logout
             %li
               %a{:href => '/status'} Status
             %li
@@ -118,12 +116,15 @@
                     %input.form-control{:name => "passb", :type => "password", :placeholder => "New password again"}
                   .form-group
                     %input.form-control{:name => "email", :type => "email", :placeholder => "New E-Mail"}
-                  %button.btn.btn-success{:type => "submit"} Update
+                  %button.btn.btn-warning{:type => "submit"} Update
           %div.col-md-6
             %div.panel.panel-default
               %div.panel-heading Reminder
               %div.panel-body
                 If you change your e-mail you will need to verify again.
+                %br
+                %br
+                %a.btn.btn-warning{:href => '/logout'} Logout
     .container
       .footer
         &copy; Copyright 2015 Piotr S. Staszewski
