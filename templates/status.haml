@@ -74,6 +74,17 @@
       %b= "Software version: CDDA IV #{ver}"
       %br
       %br
+      .panel.panel-warning
+        .panel-heading
+          %span.glyphicon.glyphicon-exclamation-sign{'aria-hidden' => 'true'}
+          Bug reporting
+        .panel-body
+          Before you report a bug please check your votes, issue details and this very page for anything relevant.
+          Always include OS and browser name, and any other information that you think might be related.
+          Bug reporting should be done via GitHub issues, where the button below will take you.
+          %br
+          %br
+          %a.btn.btn-danger{:href => 'https://github.com/drbig/cddaiv/issues', :target => '_blank'} Report a bug
     .container
       .footer
         &copy; Copyright 2015 Piotr S. Staszewski
