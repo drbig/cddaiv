@@ -78,6 +78,11 @@ module CDDAIV
 
     belongs_to :user, key: true
     belongs_to :issue, key: true
+
+    before :destroy do
+      self.dir == :up ? self.issue.score -= 1 : self.issue.score += 1
+      self.issue.save
+    end
   end
 
   DataMapper.finalize
