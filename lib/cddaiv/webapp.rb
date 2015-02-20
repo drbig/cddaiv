@@ -238,7 +238,7 @@ CDDA IV Mailer
         @user.pass = params[:passa]
       end
 
-      if params[:email]
+      unless params[:email].empty?
         @user.email = params[:email] 
         @user.verified = false
       end
@@ -248,7 +248,7 @@ CDDA IV Mailer
         return haml :fail
       end
 
-      if params[:email]
+      unless params[:email].empty?
         @user.token.destroy if @user.token
 
         token = Token.new(user: @user)
