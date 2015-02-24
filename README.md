@@ -2,7 +2,11 @@
 
 The [Cataclysm: Dark Days Ahead](http://en.cataclysmdda.com/) Issue Voting Machine.
 
+You can see the official instance running [here](http://iv.cataclysmdda.com:8111/all).
+
 This is initial code upload. Things are messy. Beware of crappy code, and even crappier templates.
+
+0.9.x version space is for bugfixes. If it runs with some load for a month without anything breaking/new bugs spotted it'll move to 1.0.
 
 **Love needed here:**
 
