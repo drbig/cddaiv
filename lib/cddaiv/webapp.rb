@@ -374,7 +374,7 @@ CDDA IV Mailer
 
     get '/vote/:dir/:id' do
       unless @user
-        @error = 'Not logegd in.'
+        @error = 'Not logged in.'
         return haml :fail
       end
 
