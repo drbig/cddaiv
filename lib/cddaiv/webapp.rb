@@ -5,6 +5,7 @@ require 'dm-serializer/to_json'
 require 'sinatra/base'
 require 'haml'
 require 'json'
+require 'httparty'
 
 require 'cddaiv/log'
 require 'cddaiv/model'
@@ -20,9 +21,14 @@ end
 module CDDAIV
   class WebApp < Sinatra::Base
     @@secret = 'this is not secure'
+    @@oauth = nil
 
     def self.secret=(str)
       @@secret = str
+    end
+
+    def self.oauth=(hsh)
+      @@oauth = hsh
     end
 
     configure do
@@ -93,6 +99,7 @@ CDDA IV Mailer
 
       @user = session[:user] ? User.get(session[:user]) : nil
       @source = session[:source] || '/all'
+      @oauth = @@oauth
 
       @filter_type = :none
       @filter = Hash.new
@@ -427,13 +434,93 @@ CDDA IV Mailer
     get '/issue/:id' do
       unless @issue = Issue.get(params[:id])
         @error = 'No such issue.'
-        return render haml :fail
+        return haml :fail
       end
 
       @votes = @issue.votes(order: [:when.desc])
       @votes_up = @votes.all(dir: :up).count
       @votes_down = @votes.all(dir: :down).count
       haml :issue
+    end
+
+    get '/oauth/github/callback' do
+      unless params[:code]
+        logger.warn 'GitHub callback without auth code'
+        return redirect :all
+      end
+
+      creds = @@oauth[:github]
+      logger.debug 'GitHub POST /access_token'
+      begin
+        res = HTTParty.post('https://github.com/login/oauth/access_token',
+                            body: {client_id: creds[:id], client_secret: creds[:secret], code: params[:code]},
+                            headers: {'Accept' => 'application/json'})
+      rescue RuntimeError => e
+        logger.error e.to_s
+        logger.debug e.backtrace.join("\n")
+        @error = 'Something died, sorry.'
+        return haml :fail
+      end
+
+      if res.code != 200 || !res.has_key?('access_token')
+        logger.error 'GitHub callback error on POST /access_token'
+        logger.debug res
+        @error = "Couldn't get access token, sorry."
+        return haml :fail
+      end
+      token = res['access_token']
+
+      logger.debug 'GitHub GET /user'
+      begin
+        res = HTTParty.get('https://api.github.com/user', query: {access_token: token}, headers: {'User-Agent' => 'drbig/cddaiv'})
+      rescue RuntimeError => e
+        logger.error e.to_s
+        logger.debug e.backtrace.join("\n")
+        @error = 'Something died, sorry.'
+        return haml :fail
+      end
+
+      if res.code != 200 || !res.has_key?('login')
+        logger.error 'GitHub callback error on GET /user'
+        logger.debug res
+        @error = "Couldn't access your profile, sorry."
+        return haml :fail
+      end
+      login = res['login']
+
+      if res.has_key? 'email'
+        email = res['email']
+      else
+        logger.debug 'GitHub GET /user/emails'
+        begin
+          res = HTTParty.get('https://api.github.com/user/emails', query: {access_token: token}, headers: {'User-Agent' => 'drbig/cddaiv'})
+        rescue RuntimeError => e
+          logger.error e.to_s
+          logger.debug e.backtrace.join("\n")
+          @error = 'Something died, sorry.'
+          return haml :fail
+        end
+
+        if res.code != 200 
+          logger.error 'GitHub callback error on GET /user/emails'
+          logger.debug res
+          @error = "You don't seem to have a public email and I couldn't get any other."
+          return haml :fail
+        end
+
+        emails = res.select {|h| h['verified'] }
+        unless emails.any?
+          logger.error 'GitHub callback no verified email found'
+          logger.debug res
+          @error = "Seems you don't have any verified email anywhere."
+          return haml :fail
+        end
+
+        email = emails.first['email']
+      end
+
+      @error = "SEEMS LIKE IT WORKED: '#{login}' - '#{email}'"
+      haml :fail
     end
   end
 end

@@ -4,6 +4,7 @@
     %div.col-md-4
       .well.well-sm.small
         %ul.list-unstyled
+          %li Signup will create a verified account if the username is available.
           %li Login is case-sensitive, has to be pure-ASCII alphanumeric, minimum 3 characters long.
           %li Password has to be minimum 6 characters, and is unfiltered.
           %li You need a working e-mail address. You will receive a verification e-mail with a link to click. Unverified accounts are deleted within two days.
@@ -22,6 +23,11 @@
             .form-group
               %button.btn.btn-success{:type => "submit"} Login
               %a{:href => '/reset'} Forgot password?
+          Or sign-up with:
+          %br
+          %a.btn.btn-warning{:href => "https://github.com/login/oauth/authorize?scope=user:email&client_id=#{@oauth[:github][:id]}"} GitHub
+          %a.btn.btn-warning{:href => "/oauth/google"} Google
+          %a.btn.btn-warning{:href => "/oauth/facebook"} Facebook
     %div.col-md-4
       %div.panel.panel-default
         %div.panel-heading Or register here
