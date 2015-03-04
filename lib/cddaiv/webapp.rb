@@ -592,25 +592,25 @@ CDDA IV Mailer
           return haml :fail
         end
 
-        login = nil
         email = data['email']
+        login = email.split('@').first
       else
         logger.warn "Unknown OAuth service '#{params[:service]}'"
         return redirect :all
       end
 
-      # Actual webapp logic
-      if user = User.first(email: email)
-        if !login.nil? && user.login != login
-          logger.warn "OAuth login mismatch for #{user.login}"
-          @error = 'Sorry, logins mismatch...'
-          return haml :fail
-        end
+      # actual webapp logic that should stay here
 
+      # emails are unique
+      if user = User.first(email: email)
         user.seen = DateTime.now
         user.save
       else
-        login = email.split('@').first unless login
+        if User.first(email: email)
+          logger.warn "OAuth register: email '#{email}' already used"
+          @error = "Sorry, email '#{email}' has already been used."
+          return haml :fail
+        end
 
         if User.get(login)
           logger.warn "OAuth register: login '#{login}' already taken"
