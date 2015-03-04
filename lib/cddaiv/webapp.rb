@@ -468,6 +468,8 @@ CDDA IV Mailer
       haml :issue
     end
 
+    # this whole contraption should probably be separated
+    # into another module
     get '/oauth/:service/callback' do
       case params[:service]
       when 'github'

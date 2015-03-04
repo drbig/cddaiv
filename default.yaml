@@ -19,3 +19,11 @@
   :clean_issues: 1w
   :clean_nv_users: 1d
   :clean_ia_users: 1d
+:oauth:
+  :github:
+    :id: client_id
+    :secret: client_secret
+  :google:
+    :id: client_id
+    :secret: client_secret
+    :uri: redirect_uri
