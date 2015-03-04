@@ -86,6 +86,26 @@ CDDA IV Mailer
         Mailer.send(user.email, 'CDDA IV - Password reset', body)
       end
 
+      def email_password(user, password)
+        body = <<-eob
+Hello #{user.login}!
+
+You've registered via an external service, and I have generated a
+temporary password for you:
+
+#{password}
+
+Please remember to change it or delete this email if you plan on
+using the sign-in option only. You can always reset your password
+if you are logged in.
+
+Best regards,
+CDDA IV Mailer
+        eob
+
+        Mailer.send(user.email, 'CDDA IV - Temporary password', body)
+      end
+
       def set_source
         uri = request.path
         uri += '?' + request.query_string unless request.query_string.empty?
@@ -519,8 +539,30 @@ CDDA IV Mailer
         email = emails.first['email']
       end
 
-      @error = "SEEMS LIKE IT WORKED: '#{login}' - '#{email}'"
-      haml :fail
+      # the webapp logic
+      if user = User.get(login)
+        user.seen = DateTime.now
+        user.save
+      else
+        if User.get(login)
+          logger.warn "GitHub register: login '#{login}' already taken"
+          @error = "Sorry, login '#{login}' has already been taken."
+          return haml :fail
+        end
+
+        password = ('A'..'Z').to_a.sample(12).join
+        user = User.new(login: login, pass: password, email: email, verified: true)
+        user.seen = DateTime.now
+        unless user.save
+          @error = user.errors.values.join(',') + '.'
+          return haml :fail
+        end
+
+        email_password(user, password)
+      end
+
+      session[:user] = user.login
+      redirect @source
     end
   end
 end
