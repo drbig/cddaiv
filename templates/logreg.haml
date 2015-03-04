@@ -26,8 +26,7 @@
           Or sign-up with:
           %br
           %a.btn.btn-warning{:href => "https://github.com/login/oauth/authorize?scope=user:email&client_id=#{@oauth[:github][:id]}"} GitHub
-          %a.btn.btn-warning{:href => "/oauth/google"} Google
-          %a.btn.btn-warning{:href => "/oauth/facebook"} Facebook
+          %a.btn.btn-warning{:href => "https://accounts.google.com/o/oauth2/auth?client_id=#{@oauth[:google][:id]}&response_type=code&scope=openid%20email&redirect_uri=#{@oauth[:google][:uri]}&state=#{@token}"} Google
     %div.col-md-4
       %div.panel.panel-default
         %div.panel-heading Or register here

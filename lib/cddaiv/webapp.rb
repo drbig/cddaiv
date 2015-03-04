@@ -6,6 +6,7 @@ require 'sinatra/base'
 require 'haml'
 require 'json'
 require 'httparty'
+require 'jwt'
 
 require 'cddaiv/log'
 require 'cddaiv/model'
@@ -120,6 +121,10 @@ CDDA IV Mailer
       @user = session[:user] ? User.get(session[:user]) : nil
       @source = session[:source] || '/all'
       @oauth = @@oauth
+
+      unless @token = session[:token]
+        @token = session[:token] = ('A'..'Z').to_a.sample(12).join
+      end
 
       @filter_type = :none
       @filter = Hash.new
@@ -463,57 +468,20 @@ CDDA IV Mailer
       haml :issue
     end
 
-    get '/oauth/github/callback' do
-      unless params[:code]
-        logger.warn 'GitHub callback without auth code'
-        return redirect :all
-      end
+    get '/oauth/:service/callback' do
+      case params[:service]
+      when 'github'
+        unless params[:code]
+          logger.warn 'GitHub callback without auth code'
+          return redirect :all
+        end
 
-      creds = @@oauth[:github]
-      logger.debug 'GitHub POST /access_token'
-      begin
-        res = HTTParty.post('https://github.com/login/oauth/access_token',
-                            body: {client_id: creds[:id], client_secret: creds[:secret], code: params[:code]},
-                            headers: {'Accept' => 'application/json'})
-      rescue RuntimeError => e
-        logger.error e.to_s
-        logger.debug e.backtrace.join("\n")
-        @error = 'Something died, sorry.'
-        return haml :fail
-      end
-
-      if res.code != 200 || !res.has_key?('access_token')
-        logger.error 'GitHub callback error on POST /access_token'
-        logger.debug res
-        @error = "Couldn't get access token, sorry."
-        return haml :fail
-      end
-      token = res['access_token']
-
-      logger.debug 'GitHub GET /user'
-      begin
-        res = HTTParty.get('https://api.github.com/user', query: {access_token: token}, headers: {'User-Agent' => 'drbig/cddaiv'})
-      rescue RuntimeError => e
-        logger.error e.to_s
-        logger.debug e.backtrace.join("\n")
-        @error = 'Something died, sorry.'
-        return haml :fail
-      end
-
-      if res.code != 200 || !res.has_key?('login')
-        logger.error 'GitHub callback error on GET /user'
-        logger.debug res
-        @error = "Couldn't access your profile, sorry."
-        return haml :fail
-      end
-      login = res['login']
-
-      if res.has_key? 'email'
-        email = res['email']
-      else
-        logger.debug 'GitHub GET /user/emails'
+        creds = @@oauth[:github]
+        logger.debug 'GitHub POST /access_token'
         begin
-          res = HTTParty.get('https://api.github.com/user/emails', query: {access_token: token}, headers: {'User-Agent' => 'drbig/cddaiv'})
+          res = HTTParty.post('https://github.com/login/oauth/access_token',
+                              body: {client_id: creds[:id], client_secret: creds[:secret], code: params[:code]},
+                              headers: {'Accept' => 'application/json'})
         rescue RuntimeError => e
           logger.error e.to_s
           logger.debug e.backtrace.join("\n")
@@ -521,31 +489,129 @@ CDDA IV Mailer
           return haml :fail
         end
 
-        if res.code != 200 
-          logger.error 'GitHub callback error on GET /user/emails'
+        if res.code != 200 || !res.has_key?('access_token')
+          logger.error 'GitHub callback error on POST /access_token'
           logger.debug res
-          @error = "You don't seem to have a public email and I couldn't get any other."
+          @error = "Couldn't get access token, sorry."
+          return haml :fail
+        end
+        token = res['access_token']
+
+        logger.debug 'GitHub GET /user'
+        begin
+          res = HTTParty.get('https://api.github.com/user', query: {access_token: token}, headers: {'User-Agent' => 'drbig/cddaiv'})
+        rescue RuntimeError => e
+          logger.error e.to_s
+          logger.debug e.backtrace.join("\n")
+          @error = 'Something died, sorry.'
           return haml :fail
         end
 
-        emails = res.select {|h| h['verified'] }
-        unless emails.any?
-          logger.error 'GitHub callback no verified email found'
+        if res.code != 200 || !res.has_key?('login')
+          logger.error 'GitHub callback error on GET /user'
           logger.debug res
+          @error = "Couldn't access your profile, sorry."
+          return haml :fail
+        end
+        login = res['login']
+
+        if res.has_key? 'email'
+          email = res['email']
+        else
+          logger.debug 'GitHub GET /user/emails'
+          begin
+            res = HTTParty.get('https://api.github.com/user/emails', query: {access_token: token}, headers: {'User-Agent' => 'drbig/cddaiv'})
+          rescue RuntimeError => e
+            logger.error e.to_s
+            logger.debug e.backtrace.join("\n")
+            @error = 'Something died, sorry.'
+            return haml :fail
+          end
+
+          if res.code != 200 
+            logger.error 'GitHub callback error on GET /user/emails'
+            logger.debug res
+            @error = "You don't seem to have a public email and I couldn't get any other."
+            return haml :fail
+          end
+
+          emails = res.select {|h| h['verified'] }
+          unless emails.any?
+            logger.error 'GitHub callback no verified email found'
+            logger.debug res
+            @error = "Seems you don't have any verified email anywhere."
+            return haml :fail
+          end
+
+          email = emails.first['email']
+        end
+      when 'google'
+        if params[:state] != @token
+          logger.error "Google callback token mismatch: #{@token} != #{params[:state]}"
+          @error = 'Security token mismatch, sorry.'
+          return haml :fail
+        end
+
+        creds = @@oauth[:google]
+        logger.debug 'Google POST /token'
+        begin
+          res = HTTParty.post('https://www.googleapis.com/oauth2/v3/token',
+                              body: {client_id: creds[:id], client_secret: creds[:secret],
+                              code: params[:code], redirect_uri: creds[:uri],
+                              grant_type: :authorization_code},
+                              headers: {'Accept' => 'application/json'})
+        rescue RuntimeError => e
+          logger.error e.to_s
+          logger.debug e.backtrace.join("\n")
+          @error = 'Something died, sorry.'
+          return haml :fail
+        end
+
+        if res.code != 200 || !res.has_key?('id_token')
+          logger.error 'Google callback error on POST /token'
+          logger.debug res
+          @error = "Couldn't get your email, sorry."
+          return haml :fail
+        end
+
+        begin
+          data = JWT.decode(res['id_token'], nil, false).first
+        rescue JWT::DecodeError => e
+          logger.error e.to_s
+          logger.debug e.backtrace.join("\n")
+          @error = 'Your ID token seems to be broken, sorry.'
+          return haml :fail
+        end
+
+        unless data['email_verified']
+          logger.error 'Google callback no verified email found'
+          logger.debug data
           @error = "Seems you don't have any verified email anywhere."
           return haml :fail
         end
 
-        email = emails.first['email']
+        login = nil
+        email = data['email']
+      else
+        logger.warn "Unknown OAuth service '#{params[:service]}'"
+        return redirect :all
       end
 
-      # the webapp logic
-      if user = User.get(login)
+      # Actual webapp logic
+      if user = User.first(email: email)
+        if !login.nil? && user.login != login
+          logger.warn "OAuth login mismatch for #{user.login}"
+          @error = 'Sorry, logins mismatch...'
+          return haml :fail
+        end
+
         user.seen = DateTime.now
         user.save
       else
+        login = email.split('@').first unless login
+
         if User.get(login)
-          logger.warn "GitHub register: login '#{login}' already taken"
+          logger.warn "OAuth register: login '#{login}' already taken"
           @error = "Sorry, login '#{login}' has already been taken."
           return haml :fail
         end
