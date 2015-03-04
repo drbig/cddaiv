@@ -79,7 +79,7 @@ module CDDAIV
               end
             else
               @@mutex.synchronize { @@sent += 1 }
-              log :info, 'Mail send successfully'
+              log :info, 'Mail sent successfully'
             end
           end
           sleep(10)
