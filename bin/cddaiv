@@ -103,6 +103,7 @@ class CLI < Thor
 
     require 'cddaiv/webapp'
     CDDAIV::WebApp.secret = cfg[:webapp][:secret] if cfg[:webapp][:secret]
+    CDDAIV::WebApp.oauth = cfg[:oauth]
     CDDAIV::WebApp.run!(cfg[:webapp])
   end
 

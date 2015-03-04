@@ -5,6 +5,8 @@ require 'dm-serializer/to_json'
 require 'sinatra/base'
 require 'haml'
 require 'json'
+require 'httparty'
+require 'jwt'
 
 require 'cddaiv/log'
 require 'cddaiv/model'
@@ -20,9 +22,14 @@ end
 module CDDAIV
   class WebApp < Sinatra::Base
     @@secret = 'this is not secure'
+    @@oauth = nil
 
     def self.secret=(str)
       @@secret = str
+    end
+
+    def self.oauth=(hsh)
+      @@oauth = hsh
     end
 
     configure do
@@ -80,6 +87,26 @@ CDDA IV Mailer
         Mailer.send(user.email, 'CDDA IV - Password reset', body)
       end
 
+      def email_password(user, password)
+        body = <<-eob
+Hello #{user.login}!
+
+You've registered via an external service, and I have generated a
+temporary password for you:
+
+#{password}
+
+Please remember to change it or delete this email if you plan on
+using the sign-in option only. You can always reset your password
+if you are logged in.
+
+Best regards,
+CDDA IV Mailer
+        eob
+
+        Mailer.send(user.email, 'CDDA IV - Temporary password', body)
+      end
+
       def set_source
         uri = request.path
         uri += '?' + request.query_string unless request.query_string.empty?
@@ -93,6 +120,11 @@ CDDA IV Mailer
 
       @user = session[:user] ? User.get(session[:user]) : nil
       @source = session[:source] || '/all'
+      @oauth = @@oauth
+
+      unless @token = session[:token]
+        @token = session[:token] = ('A'..'Z').to_a.sample(12).join
+      end
 
       @filter_type = :none
       @filter = Hash.new
@@ -427,13 +459,178 @@ CDDA IV Mailer
     get '/issue/:id' do
       unless @issue = Issue.get(params[:id])
         @error = 'No such issue.'
-        return render haml :fail
+        return haml :fail
       end
 
       @votes = @issue.votes(order: [:when.desc])
       @votes_up = @votes.all(dir: :up).count
       @votes_down = @votes.all(dir: :down).count
       haml :issue
+    end
+
+    # this whole contraption should probably be separated
+    # into another module
+    get '/oauth/:service/callback' do
+      case params[:service]
+      when 'github'
+        unless params[:code]
+          logger.warn 'GitHub callback without auth code'
+          return redirect :all
+        end
+
+        creds = @@oauth[:github]
+        logger.debug 'GitHub POST /access_token'
+        begin
+          res = HTTParty.post('https://github.com/login/oauth/access_token',
+                              body: {client_id: creds[:id], client_secret: creds[:secret], code: params[:code]},
+                              headers: {'Accept' => 'application/json'})
+        rescue RuntimeError => e
+          logger.error e.to_s
+          logger.debug e.backtrace.join("\n")
+          @error = 'Something died, sorry.'
+          return haml :fail
+        end
+
+        if res.code != 200 || !res.has_key?('access_token')
+          logger.error 'GitHub callback error on POST /access_token'
+          logger.debug res
+          @error = "Couldn't get access token, sorry."
+          return haml :fail
+        end
+        token = res['access_token']
+
+        logger.debug 'GitHub GET /user'
+        begin
+          res = HTTParty.get('https://api.github.com/user', query: {access_token: token}, headers: {'User-Agent' => 'drbig/cddaiv'})
+        rescue RuntimeError => e
+          logger.error e.to_s
+          logger.debug e.backtrace.join("\n")
+          @error = 'Something died, sorry.'
+          return haml :fail
+        end
+
+        if res.code != 200 || !res.has_key?('login')
+          logger.error 'GitHub callback error on GET /user'
+          logger.debug res
+          @error = "Couldn't access your profile, sorry."
+          return haml :fail
+        end
+        login = res['login']
+
+        if res.has_key? 'email'
+          email = res['email']
+        else
+          logger.debug 'GitHub GET /user/emails'
+          begin
+            res = HTTParty.get('https://api.github.com/user/emails', query: {access_token: token}, headers: {'User-Agent' => 'drbig/cddaiv'})
+          rescue RuntimeError => e
+            logger.error e.to_s
+            logger.debug e.backtrace.join("\n")
+            @error = 'Something died, sorry.'
+            return haml :fail
+          end
+
+          if res.code != 200 
+            logger.error 'GitHub callback error on GET /user/emails'
+            logger.debug res
+            @error = "You don't seem to have a public email and I couldn't get any other."
+            return haml :fail
+          end
+
+          emails = res.select {|h| h['verified'] }
+          unless emails.any?
+            logger.error 'GitHub callback no verified email found'
+            logger.debug res
+            @error = "Seems you don't have any verified email anywhere."
+            return haml :fail
+          end
+
+          email = emails.first['email']
+        end
+      when 'google'
+        if params[:state] != @token
+          logger.error "Google callback token mismatch: #{@token} != #{params[:state]}"
+          @error = 'Security token mismatch, sorry.'
+          return haml :fail
+        end
+
+        creds = @@oauth[:google]
+        logger.debug 'Google POST /token'
+        begin
+          res = HTTParty.post('https://www.googleapis.com/oauth2/v3/token',
+                              body: {client_id: creds[:id], client_secret: creds[:secret],
+                              code: params[:code], redirect_uri: creds[:uri],
+                              grant_type: :authorization_code},
+                              headers: {'Accept' => 'application/json'})
+        rescue RuntimeError => e
+          logger.error e.to_s
+          logger.debug e.backtrace.join("\n")
+          @error = 'Something died, sorry.'
+          return haml :fail
+        end
+
+        if res.code != 200 || !res.has_key?('id_token')
+          logger.error 'Google callback error on POST /token'
+          logger.debug res
+          @error = "Couldn't get your email, sorry."
+          return haml :fail
+        end
+
+        begin
+          data = JWT.decode(res['id_token'], nil, false).first
+        rescue JWT::DecodeError => e
+          logger.error e.to_s
+          logger.debug e.backtrace.join("\n")
+          @error = 'Your ID token seems to be broken, sorry.'
+          return haml :fail
+        end
+
+        unless data['email_verified']
+          logger.error 'Google callback no verified email found'
+          logger.debug data
+          @error = "Seems you don't have any verified email anywhere."
+          return haml :fail
+        end
+
+        email = data['email']
+        login = email.split('@').first
+      else
+        logger.warn "Unknown OAuth service '#{params[:service]}'"
+        return redirect :all
+      end
+
+      # actual webapp logic that should stay here
+
+      # emails are unique
+      if user = User.first(email: email)
+        user.seen = DateTime.now
+        user.save
+      else
+        if User.first(email: email)
+          logger.warn "OAuth register: email '#{email}' already used"
+          @error = "Sorry, email '#{email}' has already been used."
+          return haml :fail
+        end
+
+        if User.get(login)
+          logger.warn "OAuth register: login '#{login}' already taken"
+          @error = "Sorry, login '#{login}' has already been taken."
+          return haml :fail
+        end
+
+        password = ('A'..'Z').to_a.sample(12).join
+        user = User.new(login: login, pass: password, email: email, verified: true)
+        user.seen = DateTime.now
+        unless user.save
+          @error = user.errors.values.join(',') + '.'
+          return haml :fail
+        end
+
+        email_password(user, password)
+      end
+
+      session[:user] = user.login
+      redirect @source
     end
   end
 end
