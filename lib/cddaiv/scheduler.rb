@@ -33,22 +33,22 @@ module CDDAIV
 
       interval = opts[:update] || '1h'
       @@sched.every(interval, tag: 'Update database', mutex: @@mutex) do
-        CDDAIV::Database.update!
+        Database.update!
       end
 
       interval = opts[:clean_issues] || '1w'
       @@sched.every(interval, tag: 'Clean old issues', mutex: @@mutex) do
-        CDDAIV::Database.clean_issues!
+        Database.clean_issues!
       end
 
       interval = opts[:clean_nv_users] || '1d'
       @@sched.every(interval, tag: 'Clean non-verified users', mutex: @@mutex) do
-        CDDAIV::Database.clean_nv_users!
+        Database.clean_nv_users!
       end
 
       interval = opts[:clean_ia_users] || '1d'
       @@sched.every(interval, tag: 'Clean inactive users', mutex: @@mutex) do
-        CDDAIV::Database.clean_ia_users!
+        Database.clean_ia_users!
       end
     end
   end

@@ -118,8 +118,8 @@ module CDDAIV
 
     get '/status' do
       database = {issues: Issue.count, votes: Vote.count, users: User.count}
-      mailer = CDDAIV::Mailer.status
-      scheduler = CDDAIV::Scheduler.status
+      mailer = Mailer.status
+      scheduler = Scheduler.status
       haml :status, locals: {database: database, mailer: mailer, scheduler: scheduler, ver: CDDAIV::VERSION}
     end
 
