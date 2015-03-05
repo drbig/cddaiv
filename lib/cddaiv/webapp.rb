@@ -47,66 +47,6 @@ module CDDAIV
     end
 
     helpers do
-      def email_verification(user)
-        body = <<-eob
-Hello #{user.login}!
-
-You have registered/updated an account at the CDDA IV, please follow the link below:
-
-http://#{request.host_with_port}/verify/#{user.login}/#{user.token.value}
-
-to verify your account (you don't need to be logged in).
-
-If you haven't registered with the CDDA IV just ignore this email.
-If you think this is abuse or have other questions please contact the
-admin by replying to this mail.
-
-Best regards,
-CDDA IV Mailer
-        eob
-
-        Mailer.send(user.email, 'CDDA IV - Account verification', body)
-      end
-
-      def email_reset(user, password)
-        body = <<-eob
-Hello #{user.login}!
-
-You've requested a password reset. Here's your new password:
-
-#{password}
-
-Please login at http://#{request.host_with_port}/all and go to your
-user tab and change the password to something more permanent,
-preferably as soon as possible.
-
-Best regards,
-CDDA IV Mailer
-        eob
-
-        Mailer.send(user.email, 'CDDA IV - Password reset', body)
-      end
-
-      def email_password(user, password)
-        body = <<-eob
-Hello #{user.login}!
-
-You've registered via an external service, and I have generated a
-temporary password for you:
-
-#{password}
-
-Please remember to change it or delete this email if you plan on
-using the sign-in option only. You can always reset your password
-if you are logged in.
-
-Best regards,
-CDDA IV Mailer
-        eob
-
-        Mailer.send(user.email, 'CDDA IV - Temporary password', body)
-      end
-
       def set_source
         uri = request.path
         uri += '?' + request.query_string unless request.query_string.empty?
@@ -241,7 +181,7 @@ CDDA IV Mailer
         return haml :fail
       end
 
-      email_verification(user)
+      Mailer.email(:verify, user, request: request)
 
       logger.info "New user '#{user.login}' registered"
 
@@ -305,7 +245,7 @@ CDDA IV Mailer
           return haml :fail
         end
 
-        email_verification(@user)
+        Mailer.email(:verify, @user, request: request)
       end
 
       logger.info "User '#{@user.login}' data updated"
@@ -339,7 +279,7 @@ CDDA IV Mailer
         return haml :reset
       end
 
-      email_reset(user, password)
+      Mailer.email(:reset, user, request: request, password: password)
 
       logger.info "User '#{user.login}' reset password"
 
@@ -645,7 +585,7 @@ CDDA IV Mailer
           return haml :fail
         end
 
-        email_password(user, password)
+        Mailer.email(:password, user, password: password)
 
         logger.info "New user '#{user.login}' registered via OAauth"
       end

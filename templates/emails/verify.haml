@@ -1,0 +1,16 @@
+CDDA IV - Account verification
+:plain
+  Hello #{user.login}!
+  
+  You have registered/updated an account at the CDDA IV, please follow the link below:
+  
+  http://#{request.host_with_port}/verify/#{user.login}/#{user.token.value}
+  
+  to verify your account (you don't need to be logged in).
+  
+  If you haven't registered with the CDDA IV just ignore this email.
+  If you think this is abuse or have other questions please contact the
+  admin by replying to this mail.
+  
+  Best regards,
+  CDDA IV Mailer

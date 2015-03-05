@@ -3,6 +3,10 @@
 
 require 'pony'
 require 'thread'
+# below is another workaround for sinatra
+gem 'tilt', '~>1.3'
+require 'tilt'
+require 'haml'
 
 require 'cddaiv/log'
 
@@ -12,7 +16,13 @@ module CDDAIV
 
     Status = Struct.new(:state, :sent, :errors)
     Mail = Struct.new(:to, :subject, :body, :when, :tries)
+    Template = Struct.new(:engine, :subject)
 
+    CONTEXT = Object.new
+    TEMPLATES_GLOB = File.join(File.dirname(__FILE__), '..', '..',
+                               'templates', 'emails', '*.haml')
+
+    @@templates = Hash.new
     @@queue = Array.new
     @@mutex = Mutex.new
     @@sent = 0
@@ -25,6 +35,16 @@ module CDDAIV
 
     def self.options=(hsh)
       Pony.options = hsh
+    end
+
+    def self.email(template, user, locals = {})
+      raise ArgumentError, 'No such template' unless @@templates.has_key? template
+
+      temp = @@templates[template]
+      locals[:user] = user
+      body = temp.engine.render(CONTEXT, locals)
+
+      self.send(user.email, temp.subject, body)
     end
 
     def self.send(to, subject, body)
@@ -58,6 +78,18 @@ module CDDAIV
     end
 
     def self.run!
+      log :info, 'Loading mailer templates'
+      @@templates = Dir.glob(TEMPLATES_GLOB).map do |p|
+        fd = File.open(p, 'r')
+        subject = fd.readline.chop
+        body = fd.read
+        fd.close
+        engine = Haml::Engine.new(body)
+        tag = File.basename(p, '.haml').to_sym
+
+        [tag, Template.new(engine, subject)]
+      end.to_h
+
       log :info, 'Starting mailer thread'
       @@thread = Thread.new do
         while true
