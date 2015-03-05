@@ -37,7 +37,7 @@ module CDDAIV
       enable :logging
       enable :dump_errors
       enable :raise_errors
-      
+
       set :root, File.join(File.dirname(__FILE__), '..', '..')
       set :public_dir, File.join(settings.root, 'static')
       set :views, File.join(settings.root, 'templates')
@@ -217,6 +217,8 @@ CDDA IV Mailer
       user = User.new(login: params[:login], pass: params[:passa], email: params[:email])
       user.seen = DateTime.now
       unless user.save
+        logger.error "Couldn't save user '#{params[:login]}'"
+        logger.debug user.errors
         @error = user.errors.values.join(',') + '.'
         return haml :fail
       end
@@ -225,6 +227,8 @@ CDDA IV Mailer
       # TODO: i think this can be automated
       token.generate
       unless token.save
+        logger.error "Couldn't save token for user '#{user.login}'"
+        logger.debug token.errors
         @error = 'Failed to save the activation token.'
         @error += '<br>Failed to destroy the user.' unless user.destroy
         return haml :fail
@@ -232,6 +236,8 @@ CDDA IV Mailer
 
       user.token = token
       unless user.save
+        logger.error "Couldn't save user '#{user.login}' with token"
+        logger.debug user.errors
         @error = 'Failed to save the user with token.'
         @error += '<br>Failed to destroy the user.' unless user.destroy
         return haml :fail
@@ -276,6 +282,8 @@ CDDA IV Mailer
       end
 
       unless @user.save
+        logger.error "Couldn't save user '#{@user.login}'"
+        logger.debug @user.errors
         @error = @user.errors.values.join(',') + '.'
         return haml :fail
       end
@@ -288,18 +296,24 @@ CDDA IV Mailer
         token.generate
 
         unless token.save
+          logger.error "Couldn't save token for user '#{@user.login}'"
+          logger.debug token.errors
           @error = 'Failed to save the activation token.'
           return haml :fail
         end
 
         @user.token = token
         unless @user.save
+          logger.error "Couldn't save user '#{@user.login}' with token"
+          logger.debug user.errors
           @error = 'Failed to save the user with token.'
           return haml :fail
         end
 
         email_verification(@user)
       end
+
+      logger.info "User '#{@user.login}' data updated"
 
       redirect "/user/#{@user.login}"
     end
@@ -332,6 +346,8 @@ CDDA IV Mailer
 
       email_reset(user, password)
 
+      logger.info "User '#{user.login}' reset password"
+
       @done = 'You should receive an email with the new password soon.'
       @error = nil
       haml :reset
@@ -362,6 +378,8 @@ CDDA IV Mailer
       user.token.destroy || logger.error("Couldn't destroy token for '#{user.login}'")
       user.verified = true
       unless user.save
+        logger.error "Couldn't save user '#{user.login}'"
+        logger.debug user.errors
         @error = user.errors.values.join(',') + '.'
         return haml :fail
       end
@@ -393,7 +411,9 @@ CDDA IV Mailer
       end
 
       user.seen = DateTime.now
-      user.save
+      user.save || logger.error("Couldn't save user '#{user.login}'")
+
+      logger.info "User '#{user.login}' logged in"
 
       session[:user] = params[:login]
       redirect @source
@@ -559,9 +579,9 @@ CDDA IV Mailer
         begin
           res = HTTParty.post('https://www.googleapis.com/oauth2/v3/token',
                               body: {client_id: creds[:id], client_secret: creds[:secret],
-                              code: params[:code], redirect_uri: creds[:uri],
-                              grant_type: :authorization_code},
-                              headers: {'Accept' => 'application/json'})
+                                     code: params[:code], redirect_uri: creds[:uri],
+                                     grant_type: :authorization_code},
+                                     headers: {'Accept' => 'application/json'})
         rescue RuntimeError => e
           logger.error e.to_s
           logger.debug e.backtrace.join("\n")
@@ -604,7 +624,9 @@ CDDA IV Mailer
       # emails are unique
       if user = User.first(email: email)
         user.seen = DateTime.now
-        user.save
+        user.save || logger.error("Couldn't save user '#{user.login}'")
+
+        logger.info "User '#{user.login}' logged in via OAuth"
       else
         if User.first(email: email)
           logger.warn "OAuth register: email '#{email}' already used"
@@ -622,11 +644,15 @@ CDDA IV Mailer
         user = User.new(login: login, pass: password, email: email, verified: true)
         user.seen = DateTime.now
         unless user.save
+          logger.error "Couldn't save user '#{user.login}'"
+          logger.debug user.errors
           @error = user.errors.values.join(',') + '.'
           return haml :fail
         end
 
         email_password(user, password)
+
+        logger.info "New user '#{user.login}' registered via OAauth"
       end
 
       session[:user] = user.login
