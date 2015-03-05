@@ -44,8 +44,8 @@ module CDDAIV
 
     belongs_to :user
 
-    # datamapper is retarded too
-    # will need to call this explicitly before saving
+    before :valid?, :generate
+
     def generate
       salt = rand(1_000_000).to_s
       self.value = Digest::SHA1.hexdigest(user.login + user.email + salt)

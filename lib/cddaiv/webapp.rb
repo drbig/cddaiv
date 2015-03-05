@@ -224,8 +224,6 @@ CDDA IV Mailer
       end
 
       token = Token.new(user: user)
-      # TODO: i think this can be automated
-      token.generate
       unless token.save
         logger.error "Couldn't save token for user '#{user.login}'"
         logger.debug token.errors
@@ -292,9 +290,6 @@ CDDA IV Mailer
         @user.token.destroy if @user.token
 
         token = Token.new(user: @user)
-        # TODO: i think this can be automated
-        token.generate
-
         unless token.save
           logger.error "Couldn't save token for user '#{@user.login}'"
           logger.debug token.errors
