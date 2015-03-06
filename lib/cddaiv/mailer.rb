@@ -79,7 +79,7 @@ module CDDAIV
 
     def self.run!
       log :info, 'Loading mailer templates'
-      @@templates = Dir.glob(TEMPLATES_GLOB).map do |p|
+      @@templates = Hash[Dir.glob(TEMPLATES_GLOB).map do |p|
         fd = File.open(p, 'r')
         subject = fd.readline.chop
         body = fd.read
@@ -88,7 +88,7 @@ module CDDAIV
         tag = File.basename(p, '.haml').to_sym
 
         [tag, Template.new(engine, subject)]
-      end.to_h
+      end]
 
       log :info, 'Starting mailer thread'
       @@thread = Thread.new do
