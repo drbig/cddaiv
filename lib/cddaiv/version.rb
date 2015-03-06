@@ -2,5 +2,5 @@
 #
 
 module CDDAIV
-  VERSION = '0.A'
+  VERSION = '1.0-rc1'
 end
