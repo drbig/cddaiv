@@ -62,9 +62,9 @@
               %a.plain{:href => "https://github.com/CleverRaven/Cataclysm-DDA/issues/#{i.num}", :target => '_blank'}= i.title
             %td
               - if i.type == :pr
-                %span.octicon.octicon-git-pull-request
+                %span.octicon.octicon-git-pull-request.merged
               - else
-                %span.octicon.octicon-issue-closed
+                %span.octicon.octicon-issue-closed.closed
             %td= i.until.strftime('%Y-%m-%d %H:%M')
     - unless @user
       = haml :logreg, layout: false

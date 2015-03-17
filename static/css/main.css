@@ -13,3 +13,12 @@ a.anchor {
   position: relative;
   top: -64px;
 }
+.open {
+  color: #6cc644;
+}
+.merged {
+  color: #6e5494;
+}
+.closed {
+  color: #bd2c00;
+}

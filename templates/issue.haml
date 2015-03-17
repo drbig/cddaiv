@@ -50,13 +50,16 @@
           %th Type
           %td
             - if @issue.type == :pr
-              %span.octicon.octicon-git-pull-request
+              - if @issue.open
+                %span.octicon.octicon-git-pull-request.open
+              - else
+                %span.octicon.octicon-git-pull-request.merged
               Pull Request
             - else
               - if @issue.open
-                %span.octicon.octicon-issue-opened
+                %span.octicon.octicon-issue-opened.open
               - else
-                %span.octicon.octicon-issue-closed
+                %span.octicon.octicon-issue-closed.closed
               Issue
         %tr
           %th Opened

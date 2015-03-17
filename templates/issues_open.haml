@@ -40,9 +40,9 @@
         %a.anchor{:name => "#{i.id}"} &nbsp;
       %td
         - if i.type == :pr
-          %span.octicon.octicon-git-pull-request
+          %span.octicon.octicon-git-pull-request.open
         - else
-          %span.octicon.octicon-issue-opened
+          %span.octicon.octicon-issue-opened.open
         - if i.stale
           %span.octicon.octicon-alert
       %td= i.from.strftime('%Y-%m-%d %H:%M')
