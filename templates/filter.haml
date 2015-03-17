@@ -1,32 +1,44 @@
+- ft = "?ftype=#{@ftype_type}&"
+- fs = "&fstate=#{@fstate_type}"
+Filter:
 %div.btn-group{:role => 'group'}
-  - if @filter_type == :none
-    %a.btn.btn-default.active{:href => '?filter=none' } Everything
-  - else
-    %a.btn.btn-default{:href => '?filter=none' } Everything
-  - if @filter_type == :issue
-    %a.btn.btn-default.active{:href => '?filter=issue'}
+  - if @ftype_type == :issue
+    %a.btn.btn-default.active{:href => "?ftype=issue#{fs}"}
       %span.octicon.octicon-issue-opened
-      Issues only
+      Issues
   - else
-    %a.btn.btn-default{:href => '?filter=issue'}
+    %a.btn.btn-default{:href => "?ftype=issue#{fs}"}
       %span.octicon.octicon-issue-opened
-      Issues only
-  - if @filter_type == :pr
-    %a.btn.btn-default.active{:href => '?filter=pr'}
+      Issues
+  - if @ftype_type == :pr
+    %a.btn.btn-default.active{:href => "?ftype=pr#{fs}"}
       %span.octicon.octicon-git-pull-request
-      PRs only
+      PRs
   - else
-    %a.btn.btn-default{:href => '?filter=pr'}
+    %a.btn.btn-default{:href => "?ftype=pr#{fs}"}
       %span.octicon.octicon-git-pull-request
-      PRs only
-  - if stale
-    - if @filter_type == :stale
-      %a.btn.btn-default.active{:href => '?filter=stale'}
+      PRs
+  - if @ftype_type == :none
+    %a.btn.btn-default.active{:href => "?ftype=none#{fs}"} Both
+  - else
+    %a.btn.btn-default{:href => "?ftype=none#{fs}"} Both
+- if stale
+  %div.btn-group{:role => 'group'}
+    - if @fstate_type == :stale
+      %a.btn.btn-default.active{:href => "#{ft}fstate=stale"}
         %span.octicon.octicon-alert
-        Stale only
+        Stale
     - else
-      %a.btn.btn-default{:href => '?filter=stale'}
+      %a.btn.btn-default{:href => "#{ft}fstate=stale"}
         %span.octicon.octicon-alert
-        Stale only
+        Stale
+    - if @fstate_type == :fresh
+      %a.btn.btn-default.active{:href => "#{ft}fstate=fresh"} Fresh
+    - else
+      %a.btn.btn-default{:href => "#{ft}fstate=fresh"} Fresh
+    - if @fstate_type == :none
+      %a.btn.btn-default.active{:href => "#{ft}fstate=none"} Both
+    - else
+      %a.btn.btn-default{:href => "#{ft}fstate=none"} Both
 %br
 %br

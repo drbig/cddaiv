@@ -58,18 +58,26 @@ module CDDAIV
         @token = session[:token] = ('A'..'Z').to_a.sample(12).join
       end
 
-      @filter_type = :none
-      @filter = Hash.new
-      case params[:filter]
+      @ftype_type = :none
+      @ftype = Hash.new
+      case params[:ftype]
       when 'issue'
-        @filter_type = :issue
-        @filter[:type] = :issue
+        @ftype_type = :issue
+        @ftype[:type] = :issue
       when 'pr'
-        @filter_type = :pr
-        @filter[:type] = :pr
+        @ftype_type = :pr
+        @ftype[:type] = :pr
+      end
+
+      @fstate_type = :none
+      @fstate = Hash.new
+      case params[:fstate]
       when 'stale'
-        @filter_type = :stale
-        @filter[:stale] = true
+        @fstate_type = :stale
+        @fstate[:stale] = true
+      when 'fresh'
+        @fstate_type = :fresh
+        @fstate[:stale] = false
       end
     end
 
@@ -79,7 +87,7 @@ module CDDAIV
 
     get '/all' do
       set_source
-      query = {open: true, order: [:from.desc]}.merge(@filter)
+      query = {open: true, order: [:from.desc]}.merge(@ftype).merge(@fstate)
       @issues = Issue.all(query)
       @votes = @issues.map {|i| @user.votes(issue: i).first } if @user
       haml :all
@@ -87,7 +95,7 @@ module CDDAIV
 
     get '/top' do
       set_source
-      query = {open: true, limit: 30, order: [:score.desc]}.merge(@filter)
+      query = {open: true, limit: 30, order: [:score.desc]}.merge(@ftype).merge(@fstate)
       @issues = Issue.all(query).to_a
       @votes = @issues.map {|i| @user.votes(issue: i).first } if @user
       haml :top
@@ -95,7 +103,7 @@ module CDDAIV
 
     get '/bottom' do
       set_source
-      query = {open: true, limit: 30, order: [:score.asc]}.merge(@filter)
+      query = {open: true, limit: 30, order: [:score.asc]}.merge(@ftype).merge(@fstate)
       @issues = Issue.all(query).to_a
       @votes = @issues.map {|i| @user.votes(issue: i).first } if @user
       haml :bottom
@@ -103,7 +111,7 @@ module CDDAIV
 
     get '/closed' do
       set_source
-      query = {open: false, order: [:until.desc]}.merge(@filter)
+      query = {open: false, order: [:until.desc]}.merge(@ftype).merge(@fstate)
       @issues = Issue.all(query).to_a
       haml :closed
     end
