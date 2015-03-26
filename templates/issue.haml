@@ -112,5 +112,4 @@
                 %a.plain{:href => "/user/#{v.user.login}"}= v.user.login
               %td= v.when.strftime('%Y-%m-%d %H:%M:%S %Z')
     .container
-      .footer
-        &copy; Copyright 2015 Piotr S. Staszewski
+      = haml :footer, layout: false
