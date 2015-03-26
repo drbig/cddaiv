@@ -55,6 +55,9 @@ module CDDAIV
 
       @user = session[:user] ? User.get(session[:user]) : nil
       @source = session[:source] || '/all'
+      session[:nojs] = params[:nojs] unless params[:nojs].nil?
+      @nojs = session[:nojs] == 'yes'
+
       @oauth = OAuth.options
 
       unless @token = session[:token]
