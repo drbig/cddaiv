@@ -4,10 +4,6 @@ The [Cataclysm: Dark Days Ahead](http://en.cataclysmdda.com/) Issue Voting Machi
 
 You can see the official instance running [here](http://iv.cataclysmdda.com:8111/all).
 
-This is initial code upload. Things are messy. Beware of crappy code, and even crappier templates.
-
-0.9.x version space is for bugfixes. If it runs with some load for a month without anything breaking/new bugs spotted it'll move to 1.0.
-
 **Love needed here:**
 
 - Test cases (any, and all)
@@ -15,7 +11,7 @@ This is initial code upload. Things are messy. Beware of crappy code, and even c
 - Templates clean up
 - Docs (YARD)
 
-The current front-end is zero-JavaScript, which makes it archaic/old-school. If you're comfortable with modern JS frameworks please contact me. I can write you a decent JSON API so together we can make this thing *shine*.
+Starting with 1.1 voting is by default over AJAX, and so requires JavaScript. The old behaviour is still available.
 
 ## Contributing
 
