@@ -3,6 +3,7 @@
 
 require 'sinatra/base'
 require 'haml'
+require 'json'
 
 require 'cddaiv/log'
 require 'cddaiv/model'
@@ -17,6 +18,8 @@ class String
 end
 
 module CDDAIV
+  class VoteError < RuntimeError; end
+
   class WebApp < Sinatra::Base
     @@secret = 'this is not secure'
 
@@ -360,43 +363,48 @@ module CDDAIV
     end
 
     get '/vote/:dir/:id' do
-      unless @user
-        @error = 'Not logged in.'
-        return haml :fail
+      if params[:format] == 'json'
+        content_type 'application/json'
+        ajax = true
       end
 
-      unless [:up, :down].member? (dir = params[:dir].to_sym)
-        @error = 'Either vote up or down, please.'
-        return haml :fail
-      end
+      begin
+        raise VoteError, 'Not logged in.' unless @user
 
-      unless issue = Issue.get(params[:id])
-        @error = 'No such issue.'
-        return haml :fail
-      end
+        unless [:up, :down].member? (dir = params[:dir].to_sym)
+          raise VoteError, 'Either vote up or down, please.'
+        end
 
-      unless issue.open
-        @error = 'The issue has been closed.'
-        return haml :fail
-      end
+        raise VoteError, 'No such issue.' unless issue = Issue.get(params[:id])
 
-      source = "#{@source}##{issue.id}"
+        raise VoteError, 'The issue has been closed.' unless issue.open
 
-      if v = Vote.first(user: @user, issue: issue)
-        v.dir == :up ? issue.score -= 1 : issue.score += 1
-        v.destroy || logger.error("Couldn't delete vote for user '#{@user.login}' for issue '#{issue.id}'")
+        source = "#{@source}##{issue.id}"
+
+        if v = Vote.first(user: @user, issue: issue)
+          v.dir == :up ? issue.score -= 1 : issue.score += 1
+          v.destroy || logger.error("Couldn't delete vote for user '#{@user.login}' for issue '#{issue.id}'")
+          issue.save || logger.error("Couldn't save issue '#{issue.id}'")
+
+          if v.dir == dir
+            return {success: true, state: 'clear', score: issue.score.to_s}.to_json if ajax
+            return redirect source
+          end
+        end
+
+        vote = Vote.new(user: @user, issue: issue, dir: dir)
+        vote.save || logger.error("Couldn't save vote for user '#{@user.login}' for issue '#{issue.id}'")
+
+        dir == :up ? issue.score += 1 : issue.score -= 1
         issue.save || logger.error("Couldn't save issue '#{issue.id}'")
 
-        return redirect source if v.dir == dir
+        return {success: true, state: dir.to_s, score: issue.score.to_s}.to_json if ajax
+        return redirect source
+      rescue VoteError => e
+        @error = e.to_s
+        return {success: false, error: @error}.to_json if ajax
+        return haml :fail
       end
-
-      vote = Vote.new(user: @user, issue: issue, dir: dir)
-      vote.save || logger.error("Couldn't save vote for user '#{@user.login}' for issue '#{issue.id}'")
-
-      dir == :up ? issue.score += 1 : issue.score -= 1
-      issue.save || logger.error("Couldn't save issue '#{issue.id}'")
-
-      redirect source
     end
 
     get '/user/:login' do
