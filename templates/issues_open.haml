@@ -8,27 +8,47 @@
     %th Opened
   - @issues.each_with_index do |i, n|
     %tr
-      %td{:align => 'center'}= i.score
+      %td{:id => "i#{i.id}score", :align => 'center'}= i.score
       %td{:align => 'center'}
         - if @user
-          - if v = @votes[n]
-            - if v.dir == :up
-              %a.plain{:href => "/vote/up/#{i.id}", :style => 'color: green'}
-                %span.glyphicon.glyphicon-arrow-up
+          - if @nojs
+            - if v = @votes[n]
+              - if v.dir == :up
+                %a.plain{:href => "/vote/up/#{i.id}"}
+                  %span.glyphicon.glyphicon-arrow-up.upvote
+              - else
+                %a.plain{:href => "/vote/up/#{i.id}"}
+                  %span.glyphicon.glyphicon-arrow-up
+              - if v.dir == :down
+                %a.plain{:href => "/vote/down/#{i.id}"}
+                  %span.glyphicon.glyphicon-arrow-down.downvote
+              - else
+                %a.plain{:href => "/vote/down/#{i.id}"}
+                  %span.glyphicon.glyphicon-arrow-down
             - else
               %a.plain{:href => "/vote/up/#{i.id}"}
                 %span.glyphicon.glyphicon-arrow-up
-            - if v.dir == :down
-              %a.plain{:href => "/vote/down/#{i.id}", :style => 'color: red'}
-                %span.glyphicon.glyphicon-arrow-down
-            - else
               %a.plain{:href => "/vote/down/#{i.id}"}
                 %span.glyphicon.glyphicon-arrow-down
           - else
-            %a.plain{:href => "/vote/up/#{i.id}"}
-              %span.glyphicon.glyphicon-arrow-up
-            %a.plain{:href => "/vote/down/#{i.id}"}
-              %span.glyphicon.glyphicon-arrow-down
+            - if v = @votes[n]
+              - if v.dir == :up
+                %a.plain{:onclick => "vote('up', '#{i.id}')"}
+                  %span.glyphicon.glyphicon-arrow-up.upvote{:id => "i#{i.id}up"}
+              - else
+                %a.plain{:onclick => "vote('up', '#{i.id}')"}
+                  %span.glyphicon.glyphicon-arrow-up{:id => "i#{i.id}up"}
+              - if v.dir == :down
+                %a.plain{:onclick => "vote('down', '#{i.id}')"}
+                  %span.glyphicon.glyphicon-arrow-down.downvote{:id => "i#{i.id}down"}
+              - else
+                %a.plain{:onclick => "vote('down', '#{i.id}')"}
+                  %span.glyphicon.glyphicon-arrow-down{:id => "i#{i.id}down"}
+            - else
+              %a.plain{:onclick => "vote('up', '#{i.id}')"}
+                %span.glyphicon.glyphicon-arrow-up{:id => "i#{i.id}up"}
+              %a.plain{:onclick => "vote('down', '#{i.id}')"}
+                %span.glyphicon.glyphicon-arrow-down{:id => "i#{i.id}down"}
         - else
           %a.plain{:href => "#logreg"}
             %span.glyphicon.glyphicon-ban-circle
