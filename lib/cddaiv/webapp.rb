@@ -1,6 +1,7 @@
 # coding: utf-8
 #
 
+require 'dm-pager'
 require 'sinatra/base'
 require 'haml'
 require 'json'
@@ -16,6 +17,12 @@ require 'cddaiv/version'
 class String
   def join(*_); self; end
 end
+
+# pager defaults
+DataMapper::Pagination.defaults[:per_page] = 30
+DataMapper::Pagination.defaults[:pager_class] = 'pagination'
+DataMapper::Pagination.defaults[:previous_text] = '&laquo;'
+DataMapper::Pagination.defaults[:next_text] = '&raquo;'
 
 module CDDAIV
   class VoteError < RuntimeError; end
@@ -92,9 +99,10 @@ module CDDAIV
     end
 
     get '/all' do
-      set_source
       query = {open: true, order: [:from.desc]}.merge(@ftype).merge(@fstate)
-      @issues = Issue.all(query)
+      page = params[:page] || 1
+      @source = set_source # this may or may not point to some flawed logic
+      @issues = Issue.all(query).page(page)
       @votes = @issues.map {|i| @user.votes(issue: i).first } if @user
       haml :all
     end

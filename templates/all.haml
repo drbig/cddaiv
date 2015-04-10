@@ -47,6 +47,8 @@
       %h3 All open issues, by date
       = haml :filter, layout: false, locals: {stale: true}
       = haml :issues_open, layout: false
+      %div.text-center
+        = @issues.pager.to_html(@source)
     - unless @user
       = haml :logreg, layout: false
     .container
